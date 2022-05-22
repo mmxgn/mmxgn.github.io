@@ -1,16 +1,16 @@
 body {
-  background-color: black;
-  color: rgb(0, 255, 0);
+  background-color: #101010;
+  color: #8f8f8f;
 }
 
 ::selection {
-  background-color: rgb(0, 255, 0);
-  color: black;
+  background-color: #8f8f8f;
+  color: #101010;
 }
 
 ::-moz-selection {
-  background-color: rgb(0, 255, 0);
-  color: black;
+  background-color: #8f8f8f;
+  color: #101010;
 }
 
 html {
@@ -22,6 +22,9 @@ header {
   text-align: center;
 }
 
+footer {
+  text-align: center;
+}
 
 
 time {
@@ -36,6 +39,7 @@ p {
 
 pre {
   text-align: left;
+  align-content: center;  
 
 }
 
@@ -47,8 +51,8 @@ article {
 }
 
 a {
-  color: rgb(0, 255, 0);
-  text-decoration: none;
+  color: #8f8f8f;
+ 
 }
 
 nav {
@@ -64,12 +68,14 @@ li {
 }
 
 a:hover {
-  background-color: rgb(0, 255, 0);
+  background-color: #8f8f8f;
   /*background-color: orange;*/
-  color: black;
+  color: #101010;
 }
 
 pre {
   font-family: Terminus, Lucida Typewriter, monospace;
   font-size: 13px;
 }
+
+
