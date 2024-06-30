@@ -1,20 +1,16 @@
 body {
-  background-color: #101010;
-  color: #8f8f8f;
+  background-color: #2E3440;
+  color: #ECEFF4;
 }
 
 ::selection {
-  background-color: #8f8f8f;
-  color: #101010;
 }
 
 ::-moz-selection {
-  background-color: #8f8f8f;
-  color: #101010;
 }
 
 html {
-  font-family: Terminus, monospace;
+  font-family: Iosevka Light, Terminus, monospace;
   font-size: 15px;
 }
 
@@ -51,8 +47,7 @@ article {
 }
 
 a {
-  color: #8f8f8f;
- 
+  color: #EBCB8B;
 }
 
 nav {
@@ -68,9 +63,6 @@ li {
 }
 
 a:hover {
-  background-color: #8f8f8f;
-  /*background-color: orange;*/
-  color: #101010;
 }
 
 pre {
