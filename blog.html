@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2025-02-01 Σαβ 14:20 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Manos' Blog</title>
+<meta name="generator" content="Org Mode" />
+<link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" /><link rel="stylesheet" href="static/style.css" />
+</head>
+<body>
+<div id="preamble" class="status">
+<div class="floating-box">
+  <nav>
+    <img src="static/manos.png" alt="My Mug" class="profile-photo">
+    <ul class="links">
+      <a class="links" href="index.html">Home</i></a>
+      <a class="links" href="blog.html">Blog</a>
+      <a class="links" href="https://github.com/mmxgn">Github</a>
+      <a class="links" href="https://linkedin.com/in/echourdakis">LinkedIn</a>
+      <a class="links" href="static/cv.pdf">CV</a>
+      <a class="links" href="https://scholar.google.com/citations?user=Hf0rcRcAAAAJ&hl=en&oi=ao">Scholar</a>
+    </ul>
+ </nav>
+</div>
+</div>
+<div id="content" class="content">
+<h1 class="title">Manos&rsquo; Blog</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#orgedb6675">About</a></li>
+<li><a href="#orgcf0e75b">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</a>
+<ul>
+<li><a href="#org97d0e1b">Disclaimer</a></li>
+<li><a href="#orgf163327">The problem</a></li>
+<li><a href="#orgac17cac"><code>devenv</code> to the rescue</a></li>
+<li><a href="#orgf15e324">Troubleshoot</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgedb6675" class="outline-2">
+<h2 id="orgedb6675">About</h2>
+<div class="outline-text-2" id="text-orgedb6675">
+<p>
+Here I write about things I usually figure out, such as <code>pytorch</code> development in <code>nix</code>, game development, or anything that piques my interest. If you want to discuss about something, reach me by <a href="mailto:etchourdakis@gmail.com">email</a> or <a href="https://github.com/mmxgn/mmxgn.github.io/issues">github issues</a>.
+</p>
+</div>
+</div>
+<div id="outline-container-orgcf0e75b" class="outline-2">
+<h2 id="orgcf0e75b">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</h2>
+<div class="outline-text-2" id="text-orgcf0e75b">
+</div>
+<div id="outline-container-org97d0e1b" class="outline-3">
+<h3 id="org97d0e1b">Disclaimer</h3>
+<div class="outline-text-3" id="text-org97d0e1b">
+<p>
+What I write applies to the following:
+</p>
+
+<ul class="org-ul">
+<li><b>Date</b>: Jan 30, 2025</li>
+<li><b>NixOS version</b> <code>25.05</code> (unstable)</li>
+<li><b>Nixpkgs</b> channel <code>github:nixos/nixpkgs/nixos-unstable</code></li>
+<li><b>Nvidia Drivers / CUDA Version</b>: <code>565.77</code> / <code>12.7</code></li>
+</ul>
+
+<p>
+Your mileage may vary, especially if visiting this article in the future.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgf163327" class="outline-3">
+<h3 id="orgf163327">The problem</h3>
+<div class="outline-text-3" id="text-orgf163327">
+<p>
+Machine learning with python was one of my big pain with NixOS that occasionally brought me close to abandoning it. There is no single way to make things work and if not using python from <code>nixpkgs</code> it is almost guaranteed to break (e.g. during compilation of <code>numpy</code> or something similar). Furthermore, trying different ways requires writing lots of boilerplate code which can be hard to convince your colleagues to add to the git repo. I have figured two ways to keep my sanity: by <b>using docker</b> and by <b>using devenv</b>. Here I write about the latter while I might write about the former in the future:
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgac17cac" class="outline-3">
+<h3 id="orgac17cac"><code>devenv</code> to the rescue</h3>
+<div class="outline-text-3" id="text-orgac17cac">
+<p>
+I recently came across <a href="https://devenv.sh/">devenv</a> which looks promising as an easy way to let me collaborate with colleagues on ml-based python projects while still using NixOS on my local environment and not having to fight through docker shenanigans (fixing for permissions, working with git repositories, and stuff). It is easy, first include it with:
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span><code>configuration.nix</code></label><pre class="src src-nix">environment.systemPackages = [
+  pkgs.devenv
+];
+</pre>
+</div>
+
+<p>
+Then, after rebuilding from <code>configuration.nix</code>, switch to your repository on your disk and run:
+</p>
+<div class="org-src-container">
+<pre class="src src-nix"># Initialise a devenv package
+devenv init
+</pre>
+</div>
+
+<p>
+And use the following <code>devenv.nix</code>, and <code>devenv.yaml</code> file (remember to change the python version and <code>requirements.txt</code> file):
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span><code>devenv.nix</code></label><pre class="src src-nix">{ pkgs, lib, config, inputs, ... }:
+{
+
+  # Required for compiling numpy
+  packages = [ pkgs.libz ];
+
+  languages.python = {
+    enable = true;
+    version = "3.10";
+    venv.enable = true;
+    venv.requirements = ./requirements.txt;
+  };
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>devenv.yaml</label><pre class="src src-yaml">inputs:
+  nixpkgs-python:
+    url: github:cachix/nixpkgs-python
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>An example <code>requirements.txt</code> file</label><pre class="src src-pip">numpy
+torch
+torchaudio
+torchvision
+</pre>
+</div>
+
+<p>
+So, finally, after <code>devenv shell</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">python -c <span style="font-style: italic;">'import torch; print(torch.cuda.is_available())'</span>
+</pre>
+</div>
+
+<pre class="example" id="orgbbe77ee">
+True
+</pre>
+
+<p>
+Devenv will also modify your <code>.gitignore</code> file to include itself, don&rsquo;t forget to stage it with <code>git stage .gitignore</code>.
+</p>
+<div class="org-src-container">
+<pre class="src src-diff"><span style="font-weight: bold;">diff --git a/.gitignore b/.gitignore</span>
+<span style="font-weight: bold;">index 51aa465..7fd8971 100644</span>
+<span style="font-weight: bold;">--- </span><span style="font-weight: bold;">a/.gitignore</span>
+<span style="font-weight: bold;">+++ </span><span style="font-weight: bold;">b/.gitignore</span>
+<span style="font-weight: bold;">@@ -33,3 +33,12 @@</span><span style="font-weight: bold;"> build/*</span>
+ **/checkpoint*
+ **/output**.wav
+ **/*.ipynb
++# Devenv
++.devenv*
++devenv.local.nix
++
++# direnv
++.direnv
++
++# pre-commit
++.pre-commit-config.yaml
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgf15e324" class="outline-3">
+<h3 id="orgf15e324">Troubleshoot</h3>
+<div class="outline-text-3" id="text-orgf15e324">
+</div>
+<ul class="org-ul">
+<li><a id="orga6e7f6f"></a>Importing <code>numpy</code> fails with <code>ImportError: libz.so.1: cannot open shared object file: No such file or directory</code><br />
+<div class="outline-text-4" id="text-orga6e7f6f">
+<p>
+If you get an error like:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-log">&gt;&gt;&gt; import numpy
+Traceback (most recent call last):
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/__init__.py", line 23, in &lt;module&gt;
+    from . import multiarray
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/multiarray.py", line 10, in &lt;module&gt;
+    from . import overrides
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/overrides.py", line 7, in &lt;module&gt;
+    from numpy._core._multiarray_umath import (
+ImportError: libz.so.1: cannot open shared object file: No such file or directory
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/__init__.py", line 114, in &lt;module&gt;
+    from numpy.__config__ import show_config
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/__config__.py", line 4, in &lt;module&gt;
+    from numpy._core._multiarray_umath import (
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/__init__.py", line 49, in &lt;module&gt;
+    raise ImportError(msg)
+ImportError:
+
+IMPORTANT: PLEASE READ THIS FOR ADVICE ON HOW TO SOLVE THIS ISSUE!
+
+Importing the numpy C-extensions failed. This error can happen for
+many reasons, often due to issues with your setup or how NumPy was
+installed.
+
+We have compiled some common reasons and troubleshooting tips at:
+
+    https://numpy.org/devdocs/user/troubleshooting-importerror.html
+
+Please note and check the following:
+
+  * The Python version is: Python3.10 from "&lt;your-path&gt;/.devenv/state/venv/bin/python"
+  * The NumPy version is: "2.2.2"
+
+and make sure that they are the versions you expect.
+Please carefully study the documentation linked above for further help.
+
+Original error was: libz.so.1: cannot open shared object file: No such file or directory
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "&lt;stdin&gt;", line 1, in &lt;module&gt;
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/__init__.py", line 119, in &lt;module&gt;
+    raise ImportError(msg) from e
+ImportError: Error importing numpy: you should not try to import numpy from
+        its source directory; please exit the numpy source tree, and relaunch
+        your python interpreter from there.
+&gt;&gt;&gt;
+</pre>
+</div>
+
+<p>
+The solution is to add <code>pkgs.libz</code> in <code>devenv.nix</code>.
+</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<p class="date">Created: 2025-02-01 Σαβ 14:20</p>
+<p class="creator"><a href="https://www.gnu.org/software/emacs/">Emacs</a> 29.4 (<a href="https://orgmode.org">Org</a> mode 9.6.15)</p>
+</div>
+</body>
+</html>
