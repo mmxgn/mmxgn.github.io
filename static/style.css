@@ -71,8 +71,8 @@ pre {
     width: 100px;
     padding: 20px;
     border-radius: 8px;
-    background-color: #2E3440;
-    color: #ECEFF4;
+/*    background-color: #2E3440; */
+/*    color: #ECEFF4; */
     z-index: 1000; /* Keeps it above other content */
 }
 

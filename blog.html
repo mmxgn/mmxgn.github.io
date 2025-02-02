@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2025-02-01 Σαβ 14:20 -->
+<!-- 2025-02-02 Κυρ 10:39 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Manos' Blog</title>
@@ -32,34 +32,34 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#orgedb6675">About</a></li>
-<li><a href="#orgcf0e75b">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</a>
+<li><a href="#orgdea7f65">About</a></li>
+<li><a href="#org6b4b35c">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</a>
 <ul>
-<li><a href="#org97d0e1b">Disclaimer</a></li>
-<li><a href="#orgf163327">The problem</a></li>
-<li><a href="#orgac17cac"><code>devenv</code> to the rescue</a></li>
-<li><a href="#orgf15e324">Troubleshoot</a></li>
+<li><a href="#org8d59f46">Disclaimer</a></li>
+<li><a href="#orgeb06196">The problem</a></li>
+<li><a href="#orge498600"><code>devenv</code> to the rescue</a></li>
+<li><a href="#org1ac717e">Troubleshoot</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgedb6675" class="outline-2">
-<h2 id="orgedb6675">About</h2>
-<div class="outline-text-2" id="text-orgedb6675">
+<div id="outline-container-orgdea7f65" class="outline-2">
+<h2 id="orgdea7f65">About</h2>
+<div class="outline-text-2" id="text-orgdea7f65">
 <p>
 Here I write about things I usually figure out, such as <code>pytorch</code> development in <code>nix</code>, game development, or anything that piques my interest. If you want to discuss about something, reach me by <a href="mailto:etchourdakis@gmail.com">email</a> or <a href="https://github.com/mmxgn/mmxgn.github.io/issues">github issues</a>.
 </p>
 </div>
 </div>
-<div id="outline-container-orgcf0e75b" class="outline-2">
-<h2 id="orgcf0e75b">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</h2>
-<div class="outline-text-2" id="text-orgcf0e75b">
+<div id="outline-container-org6b4b35c" class="outline-2">
+<h2 id="org6b4b35c">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</h2>
+<div class="outline-text-2" id="text-org6b4b35c">
 </div>
-<div id="outline-container-org97d0e1b" class="outline-3">
-<h3 id="org97d0e1b">Disclaimer</h3>
-<div class="outline-text-3" id="text-org97d0e1b">
+<div id="outline-container-org8d59f46" class="outline-3">
+<h3 id="org8d59f46">Disclaimer</h3>
+<div class="outline-text-3" id="text-org8d59f46">
 <p>
 What I write applies to the following:
 </p>
@@ -77,18 +77,18 @@ Your mileage may vary, especially if visiting this article in the future.
 </div>
 </div>
 
-<div id="outline-container-orgf163327" class="outline-3">
-<h3 id="orgf163327">The problem</h3>
-<div class="outline-text-3" id="text-orgf163327">
+<div id="outline-container-orgeb06196" class="outline-3">
+<h3 id="orgeb06196">The problem</h3>
+<div class="outline-text-3" id="text-orgeb06196">
 <p>
 Machine learning with python was one of my big pain with NixOS that occasionally brought me close to abandoning it. There is no single way to make things work and if not using python from <code>nixpkgs</code> it is almost guaranteed to break (e.g. during compilation of <code>numpy</code> or something similar). Furthermore, trying different ways requires writing lots of boilerplate code which can be hard to convince your colleagues to add to the git repo. I have figured two ways to keep my sanity: by <b>using docker</b> and by <b>using devenv</b>. Here I write about the latter while I might write about the former in the future:
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgac17cac" class="outline-3">
-<h3 id="orgac17cac"><code>devenv</code> to the rescue</h3>
-<div class="outline-text-3" id="text-orgac17cac">
+<div id="outline-container-orge498600" class="outline-3">
+<h3 id="orge498600"><code>devenv</code> to the rescue</h3>
+<div class="outline-text-3" id="text-orge498600">
 <p>
 I recently came across <a href="https://devenv.sh/">devenv</a> which looks promising as an easy way to let me collaborate with colleagues on ml-based python projects while still using NixOS on my local environment and not having to fight through docker shenanigans (fixing for permissions, working with git repositories, and stuff). It is easy, first include it with:
 </p>
@@ -160,7 +160,7 @@ So, finally, after <code>devenv shell</code>:
 </pre>
 </div>
 
-<pre class="example" id="orgbbe77ee">
+<pre class="example" id="org998b7fb">
 True
 </pre>
 
@@ -190,13 +190,13 @@ Devenv will also modify your <code>.gitignore</code> file to include itself, don
 </div>
 </div>
 
-<div id="outline-container-orgf15e324" class="outline-3">
-<h3 id="orgf15e324">Troubleshoot</h3>
-<div class="outline-text-3" id="text-orgf15e324">
+<div id="outline-container-org1ac717e" class="outline-3">
+<h3 id="org1ac717e">Troubleshoot</h3>
+<div class="outline-text-3" id="text-org1ac717e">
 </div>
 <ul class="org-ul">
-<li><a id="orga6e7f6f"></a>Importing <code>numpy</code> fails with <code>ImportError: libz.so.1: cannot open shared object file: No such file or directory</code><br />
-<div class="outline-text-4" id="text-orga6e7f6f">
+<li><a id="orgbf8e391"></a>Importing <code>numpy</code> fails with <code>ImportError: libz.so.1: cannot open shared object file: No such file or directory</code><br />
+<div class="outline-text-4" id="text-orgbf8e391">
 <p>
 If you get an error like:
 </p>
@@ -267,7 +267,7 @@ The solution is to add <code>pkgs.libz</code> in <code>devenv.nix</code>.
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2025-02-01 Σαβ 14:20</p>
+<p class="date">Created: 2025-02-02 Κυρ 10:39</p>
 <p class="creator"><a href="https://www.gnu.org/software/emacs/">Emacs</a> 29.4 (<a href="https://orgmode.org">Org</a> mode 9.6.15)</p>
 </div>
 </body>
