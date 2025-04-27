@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2025-02-15 Σαβ 10:42 -->
+<!-- 2025-04-27 Κυρ 20:04 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Manos' Blog</title>
@@ -32,34 +32,100 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org02504e9">About</a></li>
-<li><a href="#org40b76fc">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</a>
+<li><a href="#org17bb815">About</a></li>
+<li><a href="#orge66d5d2">Run Godot made games/apps on NixOS</a></li>
+<li><a href="#org305cf74">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</a>
 <ul>
-<li><a href="#orge66864c">Disclaimer</a></li>
-<li><a href="#org4893af2">The problem</a></li>
-<li><a href="#org882db46"><code>devenv</code> to the rescue</a></li>
-<li><a href="#org1453692">Troubleshoot</a></li>
+<li><a href="#org878f74d">Disclaimer</a></li>
+<li><a href="#orgf330e29">The problem</a></li>
+<li><a href="#orge3b17c4"><code>devenv</code> to the rescue</a></li>
+<li><a href="#org8395eb5">Troubleshoot</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-
-<div id="outline-container-org02504e9" class="outline-2">
-<h2 id="org02504e9">About</h2>
-<div class="outline-text-2" id="text-org02504e9">
+<div id="outline-container-org17bb815" class="outline-2">
+<h2 id="org17bb815">About</h2>
+<div class="outline-text-2" id="text-org17bb815">
 <p>
 Here I write about things I usually figure out, such as <code>pytorch</code> development in <code>nix</code>, game development, or anything that piques my interest. If you want to discuss about something, reach me by <a href="mailto:etchourdakis@gmail.com">email</a> or <a href="https://github.com/mmxgn/mmxgn.github.io/issues">github issues</a>.
 </p>
 </div>
 </div>
-<div id="outline-container-org40b76fc" class="outline-2">
-<h2 id="org40b76fc">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</h2>
-<div class="outline-text-2" id="text-org40b76fc">
+<div id="outline-container-orge66d5d2" class="outline-2">
+<h2 id="orge66d5d2">Run Godot made games/apps on NixOS</h2>
+<div class="outline-text-2" id="text-orge66d5d2">
+<p>
+Trying to run games (or apps) made in Godot in Nixos will result in:
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>Result of trying to run <a href="https://deakcor.itch.io/pixelover">Pixelover</a> on Nixos</label><pre class="src src-bash">mmxgn@emerdesktop ~/Downloads/pixelover-linux-demo $ ./PixelOver.x86_64  
+Could not start dynamically linked executable: ./PixelOver.x86_64
+NixOS cannot run dynamically linked executables intended for generic
+linux environments out of the box. For more information, see:
+https://nix.dev/permalink/stub-ld
+</pre>
 </div>
-<div id="outline-container-orge66864c" class="outline-3">
-<h3 id="orge66864c">Disclaimer</h3>
-<div class="outline-text-3" id="text-orge66864c">
+
+<p>
+The correct nix approach would be to create a derivation with all the necessary dependencies and patchelf the binaries. However
+noone has time for that. <a href="https://discourse.nixos.org/t/tips-tricks-for-nixos-desktop/28488/2">Here</a>&rsquo;s a solution that has served me well:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-nix"><span style="font-weight: bold; font-style: italic;">environment.systemPackages</span> = <span style="font-weight: bold;">with</span> pkgs; [
+  (<span style="font-weight: bold;">let</span> <span style="font-weight: bold; font-style: italic;">base</span> = pkgs.appimageTools.defaultFhsEnvArgs; <span style="font-weight: bold;">in</span>
+    pkgs.buildFHSEnv(base // {
+    <span style="font-weight: bold; font-style: italic;">name</span> = <span style="font-style: italic;">"fhs"</span>;
+    <span style="font-weight: bold; font-style: italic;">targetPkgs</span> = pkgs: 
+      (base.targetPkgs pkgs) ++ (<span style="font-weight: bold;">with</span> pkgs; [
+        pkg-config
+        ncurses
+        zsh
+        mesa
+        libglvnd
+        wayland
+        wayland-protocols
+        glfw
+      ]
+      );
+    <span style="font-weight: bold; font-style: italic;">LD_LIBRARY_PATH</span> = <span style="font-weight: bold;">with</span> pkgs; lib.makeLibraryPath [
+      mesa
+      libglvn
+    ];
+    <span style="font-weight: bold; font-style: italic;">profile</span> = <span style="font-style: italic;">"export FHS=1"</span>;
+    <span style="font-weight: bold; font-style: italic;">runScript</span> = <span style="font-style: italic;">"zsh"</span>;
+    <span style="font-weight: bold; font-style: italic;">extraOutputsToInstall</span> = [<span style="font-style: italic;">"dev"</span>];
+  }))
+];
+</pre>
+</div>
+
+<p>
+Then by running <code>fhs</code> first, you can simply execute the binary as you would under an FHS-compliant distribution:
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">mmxgn@emerdesktop ~/Downloads/pixelover-linux-demo $ fhs
+mmxgn@emerdesktop ~/Downloads/pixelover-linux-demo $ ./PixelOver.x86_64
+</pre>
+</div>
+
+
+<div id="org1774fb1" class="figure">
+<p><img src="./static/pixelover.png" alt="pixelover.png" />
+</p>
+<p><span class="figure-number">Figure 1: </span>Pixelover is a great app for converting your 3d models to 2d sprites (spaceship model by yours truly).</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org305cf74" class="outline-2">
+<h2 id="org305cf74">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</h2>
+<div class="outline-text-2" id="text-org305cf74">
+</div>
+<div id="outline-container-org878f74d" class="outline-3">
+<h3 id="org878f74d">Disclaimer</h3>
+<div class="outline-text-3" id="text-org878f74d">
 <p>
 What I write applies to the following:
 </p>
@@ -76,25 +142,23 @@ Your mileage may vary, especially if visiting this article in the future.
 </p>
 </div>
 </div>
-
-<div id="outline-container-org4893af2" class="outline-3">
-<h3 id="org4893af2">The problem</h3>
-<div class="outline-text-3" id="text-org4893af2">
+<div id="outline-container-orgf330e29" class="outline-3">
+<h3 id="orgf330e29">The problem</h3>
+<div class="outline-text-3" id="text-orgf330e29">
 <p>
 Machine learning with python was one of my big pain with NixOS that occasionally brought me close to abandoning it. There is no single way to make things work and if not using python from <code>nixpkgs</code> it is almost guaranteed to break (e.g. during compilation of <code>numpy</code> or something similar). Furthermore, trying different ways requires writing lots of boilerplate code which can be hard to convince your colleagues to add to the git repo. I have figured two ways to keep my sanity: by <b>using docker</b> and by <b>using devenv</b>. Here I write about the latter while I might write about the former in the future:
 </p>
 </div>
 </div>
-
-<div id="outline-container-org882db46" class="outline-3">
-<h3 id="org882db46"><code>devenv</code> to the rescue</h3>
-<div class="outline-text-3" id="text-org882db46">
+<div id="outline-container-orge3b17c4" class="outline-3">
+<h3 id="orge3b17c4"><code>devenv</code> to the rescue</h3>
+<div class="outline-text-3" id="text-orge3b17c4">
 <p>
 I recently came across <a href="https://devenv.sh/">devenv</a> which looks promising as an easy way to let me collaborate with colleagues on ml-based python projects while still using NixOS on my local environment and not having to fight through docker shenanigans (fixing for permissions, working with git repositories, and stuff). It is easy, first include it with:
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span><code>configuration.nix</code></label><pre class="src src-nix">environment.systemPackages = [
+<label class="org-src-name"><span class="listing-number">Listing 2: </span><code>configuration.nix</code></label><pre class="src src-nix"><span style="font-weight: bold; font-style: italic;">environment.systemPackages</span> = [
   pkgs.devenv
 ];
 </pre>
@@ -104,7 +168,7 @@ I recently came across <a href="https://devenv.sh/">devenv</a> which looks promi
 Then, after rebuilding from <code>configuration.nix</code>, switch to your repository on your disk and run:
 </p>
 <div class="org-src-container">
-<pre class="src src-nix"># Initialise a devenv package
+<pre class="src src-nix"><span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">Initialise a devenv package</span>
 devenv init
 </pre>
 </div>
@@ -114,27 +178,27 @@ And use the following <code>devenv.nix</code>, and <code>devenv.yaml</code> file
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 2: </span><code>devenv.nix</code></label><pre class="src src-nix">{ pkgs, lib, config, inputs, ... }:
+<label class="org-src-name"><span class="listing-number">Listing 3: </span><code>devenv.nix</code></label><pre class="src src-nix">{ pkgs, lib, config, inputs, ... }:
 {
 
-  # Required for compiling numpy
-  packages = [ pkgs.libz ];
+  <span style="font-weight: bold; font-style: italic;"># Required for compiling numpy</span>
+  <span style="font-weight: bold; font-style: italic;">packages</span> = [ pkgs.libz ];
 
-  languages.python = {
-    enable = true;
-    version = "3.10";
-    venv.enable = true;
-    venv.requirements = ./requirements.txt;
+  <span style="font-weight: bold; font-style: italic;">languages.python</span> = {
+    <span style="font-weight: bold; font-style: italic;">enable</span> = <span style="font-weight: bold;">true</span>;
+    <span style="font-weight: bold; font-style: italic;">version</span> = <span style="font-style: italic;">"3.10"</span>;
+    <span style="font-weight: bold; font-style: italic;">venv.enable</span> = <span style="font-weight: bold;">true</span>;
+    <span style="font-weight: bold; font-style: italic;">venv.requirements</span> = <span style="font-weight: bold; text-decoration: underline;">./requirements.txt</span>;
   };
 
-  # This is required if you want your module to see cuda
-  env.LD_LIBRARY_PATH = "/run/opengl-driver/lib";
+  <span style="font-weight: bold; font-style: italic;"># This is required if you want your module to see cuda</span>
+  <span style="font-weight: bold; font-style: italic;">env.LD_LIBRARY_PATH</span> = <span style="font-style: italic;">"/run/opengl-driver/lib"</span>;
 }
 </pre>
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 3: </span>devenv.yaml</label><pre class="src src-yaml">inputs:
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>devenv.yaml</label><pre class="src src-yaml">inputs:
   nixpkgs-python:
     url: github:cachix/nixpkgs-python
     inputs:
@@ -147,7 +211,7 @@ And use the following <code>devenv.nix</code>, and <code>devenv.yaml</code> file
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 4: </span>An example <code>requirements.txt</code> file</label><pre class="src src-pip">numpy
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>An example <code>requirements.txt</code> file</label><pre class="src src-pip">numpy
 torch
 torchaudio
 torchvision
@@ -163,7 +227,7 @@ So, finally, after <code>devenv shell</code>:
 </pre>
 </div>
 
-<pre class="example" id="orgfc4c527">
+<pre class="example" id="orgc9e7f53">
 True
 </pre>
 
@@ -192,14 +256,13 @@ Devenv will also modify your <code>.gitignore</code> file to include itself, don
 </div>
 </div>
 </div>
-
-<div id="outline-container-org1453692" class="outline-3">
-<h3 id="org1453692">Troubleshoot</h3>
-<div class="outline-text-3" id="text-org1453692">
+<div id="outline-container-org8395eb5" class="outline-3">
+<h3 id="org8395eb5">Troubleshoot</h3>
+<div class="outline-text-3" id="text-org8395eb5">
 </div>
 <ul class="org-ul">
-<li><a id="org713dd80"></a>Importing <code>module</code> fails with <code>ImportError: libXXX.so.X: cannot open shared object file: No such file or directory</code><br />
-<div class="outline-text-4" id="text-org713dd80">
+<li><a id="org6e75d94"></a>Importing <code>module</code> fails with <code>ImportError: libXXX.so.X: cannot open shared object file: No such file or directory</code><br />
+<div class="outline-text-4" id="text-org6e75d94">
 <p>
 If you get an error like:
 </p>
@@ -277,7 +340,7 @@ nix-locate <span style="font-style: italic;">'libz.so.1'</span>
 </pre>
 </div>
 
-<pre class="example" id="orgfe832bc">
+<pre class="example" id="orgf5bc994">
 ...
 zlib.out                                              0 s /nix/store/jb442jir0a2x7zsk0d63xb6rh8p280ai-zlib-1.3.1/lib/libz.so.1
 zlib.out                                        128,584 x /nix/store/jb442jir0a2x7zsk0d63xb6rh8p280ai-zlib-1.3.1/lib/libz.so.1.3.1
@@ -308,8 +371,8 @@ Another usual suspect is <code>cv2</code> which requires <code>pkgs.libGL</code>
 </div>
 </div>
 <div id="postamble" class="status">
-<p class="date">Created: 2025-02-15 Σαβ 10:42</p>
-<p class="creator"><a href="https://www.gnu.org/software/emacs/">Emacs</a> 29.4 (<a href="https://orgmode.org">Org</a> mode 9.6.15)</p>
+<p class="date">Created: 2025-04-27 Κυρ 20:04</p>
+<p class="creator"><a href="https://www.gnu.org/software/emacs/">Emacs</a> 30.1 (<a href="https://orgmode.org">Org</a> mode 9.7.11)</p>
 </div>
 </body>
 </html>
