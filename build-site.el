@@ -51,7 +51,7 @@
              :publishing-directory "./public"
              :with-author nil           ;; Don't include author name
              :with-creator t            ;; Include Emacs and Org versions in footer
-             :with-toc  nil ;; Include a table of contents
+             :with-toc  1               ;; Include TOC with depth 1 (only top-level headers)
              :with-date t
              :section-numbers nil       ;; Don't include section numbers
              :time-stamp-file t
@@ -75,6 +75,15 @@
 
 ;; Generate cache-busting version from current timestamp
 (defvar cache-buster (format-time-string "%Y%m%d%H%M%S"))
+
+;; Control TOC depth globally
+(defun my-toc-only-level-1 (depth)
+  "Override TOC depth to only show level 1 headlines."
+  1)
+
+(advice-add 'org-export-collect-headlines :filter-args
+            (lambda (args)
+              (list (car args) 1 (cddr args))))
 
 (setq org-html-validation-link nil
       org-html-head-include-scripts nil       ;; Use our own scripts

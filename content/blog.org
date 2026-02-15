@@ -1,9 +1,199 @@
 #+title: Manos' Blog
-#+OPTIONS: toc:t
+#+OPTIONS: toc:1
 
 * About
 Here I write about things I usually figure out, such as ~pytorch~ development in ~nix~, game development, or anything that piques my interest. If you want to discuss about something, reach me by [[mailto:etchourdakis@gmail.com][email]] or [[https://github.com/mmxgn/mmxgn.github.io/issues][github issues]].
 
+* Refactoring and porting my Website repo to Nix with Claude   
+
+I am an Emacs user (although with VI bindings) and keep my notes in org-mode using [[https://protesilaos.com/emacs/denote][Protesilaos' denote]]. I /love/ Org-mode. To my eyes it's the best note taking system available in software form.
+At some point, I got across a great [[https://www.youtube.com/watch?v=AfkrzFodoNw&embeds_referring_euri=https%3A%2F%2Fsystemcrafters.net%2F&source_ve_path=MjM4NTE][video]] by [[https://systemcrafters.net/][SystemCrafters]] (also available as a post [[https://systemcrafters.net/publishing-websites-with-org-mode/building-the-site/][here]]) which showed how to create a website using Org-mode and ~org-html-publish-to-html~ (a function which creates ~html~ files from ~org~ files)
+so I took some effort to port my then minimal html-only website to org-mode.
+
+** The Problem
+
+The way my website works, and worked before, was that had a custom ~build.sh~ shell script together with a ~build-site.el~ which was based on the [[https://www.youtube.com/watch?v=AfkrzFodoNw&embeds_referring_euri=https%3A%2F%2Fsystemcrafters.net%2F&source_ve_path=MjM4NTE][video]] by [[https://systemcrafters.net/][SystemCrafters]].
+This would read the contents in ~content/~ and use ~org-html-publish-to-html~ to generate the html files under ~public~. Then, I commited ~public~ to my github pages repo. This worked fine
+but it had some big issues:
+
+1. The code used for building was not under version control.
+2. I had to manually call ~build.sh~ and then ~git commit~ and ~git push~ every time I wanted to make an update.
+3. If I wanted to preview the changes, I would do it with ~python -m http.serve~ which works fine but requires a system-wide installed python.
+4. If I wanted to make a change from another computer, I would need to copy the whole folder, make the changes, and then repeat the steps in 2.
+
+Of course this was a bit bothersome to maintain and it kills motivation to write to a degree. To alleviate the issues above, I had already planned some changes
+which I never did:
+
+1. Move the published website to a different repo than ~main~ and keep ~main~ for the building code.
+2. Use GITHUB actions to render the website, instead of having to call ~build.sh~ every time.
+3. Since I am using NixOS, create a reproducible environment which locked ~emacs~ and ~python~ for both rendering and previewing the website.
+
+The reason for not fixing these was, I never found the motivation to work on those changes but since I recently got a personal Claude Code subscription to see what it's all about I asked /"why not?"/.
+
+** Fixing Issues #1, and #2: Setting up a separate branch for publishing and continuous integration with github worfklows.
+
+The first thing to do here, is to create a new branch ~gh-pages~ and set github pages to publish from there. See [[https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site][here]]. Then, you must add ~public/~ to ~.gitignore~ to avoid commiting and pushing it manually (publishing will be done by github workflows from now on):
+
+#+caption: ~.gitignore~
+#+begin_src  :results raw :wrap example :exports both :session first
+...
+# Build artifacts
+public/
+...
+#+end_src
+
+Then, add the following to ~.github/worfklows/deploy.yaml~:
+
+#+begin_src yaml :results raw :wrap example :exports both :session first
+name: Build and Deploy Org Site
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual triggers
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper git operations
+
+      - name: Install Emacs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emacs-nox
+
+      - name: Cache Emacs packages
+        uses: actions/cache@v3
+        with:
+          path: .packages
+          key: emacs-packages-${{ hashFiles('build-site.el') }}
+          restore-keys: emacs-packages-
+
+      - name: Build site
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          force_orphan: true  # Keep gh-pages clean
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'build: deploy site from ${{ github.sha }}'
+#+end_src
+
+Commit and push your changes to ~main~ now which properly tracks your code. Now every time you commit and push a change (e.g. in ~content/blog.org~) it will be
+picked up by github actions and after a while you will have your website ready at your github-pages appointed url.
+
+** Fixing Issues #3, and #4: Setting up a Nix Development Environment
+
+The first thing I asked Claude Code  to do was (after initializing in the repo with ~init~) was to create the ~flake.nix~ file. Creating ~nix~ environments is my goto litmus test
+for AI assistants since I've found they tend to fail on these a lot. It passed the test after a while, with some caveats, (I will make a post on the cases where  ~ClaudeCode~+~Sonnet~ combination still fails) creating
+two targets ~build~ and ~serve~, which you can call with ~nix run .#<target>~ and do what you would expect. 
+
+#+CAPTION:  ~flake.nix~ generated by Claude
+#+begin_src nix
+  {
+    description = "Simple Org-mode Website";
+
+    outputs = { self, nixpkgs, flake-utils }:
+      flake-utils.lib.eachDefaultSystem (system:
+        {
+
+          # Emacs with htmlize which is needed for rendering org mode files
+          emacs-with-packages = ...;
+          
+          # The website as a derivation
+          buildSite = pkgs.stdenv.mkDerivation { ... };
+
+          # The serving script
+          serveScript = pkgs.writeShellScriptBin ...;
+
+          # 
+          devShells.default = ...;
+
+          # Build the website to ./result
+          packages.default = ...;
+
+          # Convenient apps
+          apps = {
+            serve = ...;  # Build and serve locally
+          };
+        }
+      );
+  }
+#+end_src
+
+Now I could simply run:
+#+begin_src bash
+nix develop      # Enter dev environment
+nix run .#serve  # Build and test locally
+nix build        # Build for deployment
+#+end_src
+
+With this, I solved issues 3, and 4 above.  
+
+** Minor enhancements with Claude Code
+
+Having fixed the issues that related to building and deploying the website, I turned my attention to some other isses and enhancements I had in mind:
+
+*** Setting up a nicer theme
+I am quite fond of Deus Ex: Human Revolution. It is one of my favourite games of all times. So, when I saw that someone made a collection of [[https://github.com/tomaytotomato/jensen][themes]] based around its cyber-rennaisance colorscheme, I had to
+add it everywhere, including my website. This was very easy, I just pointed Claude to Jensen's [[https://github.com/tomaytotomato/jensen/blob/main/README.md][README.md]] file, and it did the rest. While I was at it, I replaced the hovering menu on the right with a top bar, set some
+nice transparencies and added a cyber-rennaisancy [[file:static/bg.png][background]] I quickly made in blender to better match the theme. 
+
+
+*** Cache-Busting for Static Assets
+
+One minor, but annoying issue I had was browser caching - visitors would see old CSS/JS even after updates. Claude implemented cache-busting by adding timestamps to asset URLs:
+
+#+CAPTION: Cache-busting in ~build-site.el~
+#+begin_src emacs-lisp
+;; Generate timestamp-based version
+(defvar cache-buster (format-time-string "%Y%m%d%H%M%S"))
+
+(setq org-html-head
+  (concat
+    "<link rel=\"stylesheet\" href=\"static/style.css?v="
+    cache-buster "\" />"))
+#+end_src
+
+Every build generates a new timestamp, forcing browsers to load fresh assets.
+
+** The Workflow Now
+
+My current workflow is beautifully simple:
+
+#+caption: The current workflow 
+#+begin_src bash
+# 1. Edit content
+emacs content/blog.org
+
+# 2. Test locally
+nix run .#serve
+
+# 3. Commit and push
+git add content/blog.org
+git commit -m "feat: add new blog post"
+git push
+
+# GitHub Actions deploys automatically!
+#+end_src
+
+** Using This Setup Yourself
+
+If you want to build your website the same way on github pages, just [[https://github.com/mmxgn/mmxgn.github.io][fork]] my repo on github, change the content, and follow the README.
 * Developing with python and ~eglot~ using ~tramp~ :noexport:
 
 ** TODO Describe the issue
@@ -506,8 +696,120 @@ D_{\text{KL}}(q) = \frac{1}{2}\left [ \sigma_{q}^{2} + \mu_{q}^{2} -1 - \log(\si
 
 Practically, $\sigma_q$ and $\mu_q$ are approximated from the "batch" of latents $z$, as $\mu_{q} = \frac{1}{B}\sum_i^B{z_i}$ and $\sigma_q = \frac{1}{B}\sum_{i}^B\left|z_{i}  - \mu_{q} \right|^2$.
 
-* Second blog post :noexport:
-:PROPERTIES:
-:EXPORT_FILE_NAME: 2024-10-07-second
-:END:
-Second blog post
+
+* Welcome
+
+Your content here!
+EOF
+
+# Create your blog
+cat > content/blog.org <<EOF
+#+title: My Blog
+#+OPTIONS: toc:t
+
+* About
+Write about yourself here.
+
+* My First Post
+Your first blog post!
+EOF
+#+end_src
+
+*** Customize the Site
+
+Edit =build-site.el= to change:
+- Site title and metadata
+- CSS stylesheets
+- Author information
+- Publishing options
+
+#+CAPTION: Example customization in ~build-site.el~
+#+begin_src emacs-lisp
+(setq org-publish-project-alist
+  (list
+    (list "org-site:main"
+      :author "Your Name"  ; Change this
+      :with-email nil
+      ...)))
+#+end_src
+
+*** Build and Test
+
+#+CAPTION: Local development workflow
+#+begin_src bash
+# Build and serve on http://localhost:8000
+nix run .#serve
+
+# Or build manually
+./build.sh
+cd public
+python -m http.server 8000
+#+end_src
+
+*** Deploy to GitHub Pages
+
+1. Create a new repository on GitHub (e.g., =username.github.io=)
+2. Set up the git worktree structure:
+
+#+CAPTION: Initialize git branches
+#+begin_src bash
+git checkout -b main
+git add .
+git commit -m "feat: initial website"
+
+# Create deployment branch
+git checkout --orphan gh-pages
+git reset --hard
+git commit --allow-empty -m "feat: initialize deployment"
+git checkout main
+
+# Set up worktree
+git worktree add public gh-pages
+#+end_src
+
+3. Push to GitHub:
+
+#+CAPTION: Push to GitHub
+#+begin_src bash
+git remote add origin git@github.com:username/username.github.io.git
+git push -u origin main
+git push -u origin gh-pages
+#+end_src
+
+4. Enable GitHub Pages in your repository settings:
+   - Go to Settings → Pages
+   - Set Source to =gh-pages= branch
+   - Save
+
+5. Every push to =main= will now auto-deploy! 🎉
+
+*** Customizing the Theme
+
+The site uses the Jensen theme with customizable colors. Edit =content/static/style.css= to change:
+
+#+CAPTION: Color variables in ~style.css~
+#+begin_src css
+:root {
+  --jensen-bg: #141514;      /* Background */
+  --jensen-fg: #FBFBFB;      /* Text */
+  --jensen-gold: #EDA622;    /* Accent color */
+  /* ... more colors ... */
+}
+#+end_src
+
+** Conclusion
+
+What would have taken me days of reading documentation and trial-and-error took a few hours of interactive conversation with Claude. The result is a maintainable, reproducible development environment with automated deployment.
+
+If you're struggling with similar infrastructure challenges, I highly recommend trying Claude Code. It's like having an experienced DevOps engineer available 24/7.
+
+The best part? You can clone this setup and have your own org-mode website running in minutes!
+
+** Resources
+
+- My website: [[https://mmxgn.github.io][mmxgn.github.io]]
+- Source code: [[https://github.com/mmxgn/mmxgn.github.io][GitHub repository]]
+- [[https://nixos.org/manual/nix/stable/][Nix Manual]]
+- [[https://orgmode.org/][Org-mode]]
+- [[https://github.com/tomaytotomato/jensen][Jensen Theme]]
+- [[https://claude.ai/][Claude AI]]

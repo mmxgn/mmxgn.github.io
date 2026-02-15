@@ -256,6 +256,36 @@ body {
 
 /* Mobile: different behavior */
 @media (max-width: 768px) {
+    /* Smaller fonts for mobile */
+    html {
+        font-size: 13px;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+    }
+
+    h3 {
+        font-size: 1.2rem;
+    }
+
+    p {
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    pre {
+        font-size: 11px;
+    }
+
+    .top-bar a {
+        font-size: 13px;
+    }
+
     /* Make header scroll with content on mobile */
     .top-bar {
         position: relative;
@@ -267,17 +297,41 @@ body {
     /* Remove body padding since header is no longer fixed */
     body {
         padding-top: 0;
+        padding-left: 0;
+        padding-right: 0;
     }
 
     /* Full width content on mobile */
     article {
         width: 100% !important;
-        padding: 0 10px !important;
+        max-width: 100% !important;
+        padding: 0 5px !important;
+        margin: 0 !important;
     }
 
+    /* Make text elements use full width */
     p, ul, ol {
-        margin-left: 10px;
-        margin-right: 10px;
+        margin-left: 5px !important;
+        margin-right: 5px !important;
+        max-width: calc(100% - 10px) !important;
+        width: auto !important;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        margin-left: 5px !important;
+        margin-right: 5px !important;
+        max-width: calc(100% - 10px) !important;
+    }
+
+    pre {
+        margin-left: 5px !important;
+        margin-right: 5px !important;
+        max-width: calc(100% - 10px) !important;
+    }
+
+    /* Override Simple.css container constraints */
+    body > * {
+        max-width: 100% !important;
     }
 }
 

@@ -1,4 +1,4 @@
 #+TITLE: Sitemap for project org-site:main
 
 - [[file:index.org][Emmanouil Theofanis Chourdakis]]
-- [[file:blog.org][Manos' Blog]]
+- [[file:blog.org][Manos' Blog My Blog]]
