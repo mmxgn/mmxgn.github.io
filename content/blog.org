@@ -4,7 +4,7 @@
 * About
 Here I write about things I usually figure out, such as ~pytorch~ development in ~nix~, game development, or anything that piques my interest. If you want to discuss about something, reach me by [[mailto:etchourdakis@gmail.com][email]] or [[https://github.com/mmxgn/mmxgn.github.io/issues][github issues]].
 
-* Developing with python and ~eglot~ using ~tramp~
+* Developing with python and ~eglot~ using ~tramp~ :noexport:
 
 ** TODO Describe the issue
 
@@ -31,7 +31,7 @@ CMD ["pylsp"]
 ** References
 - [ ]  https://nlited.de/using-helix-editor-with-a-dockerized-python-lsp
 
-* Simulating VSCode's ~launch.json~ on Emacs with ~realgud~ and ~elgot~.
+* Simulating VSCode's ~launch.json~ on Emacs with ~realgud~ and ~elgot~. :noexport:
 
 ** Disclaimer 
 This has been tested on Emacs 30.2 installed on NixOS using the [[https://github.com/nix-community/emacs-overlay][Emacs Overlay]]. Your mileage might vary

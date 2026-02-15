@@ -68,7 +68,7 @@
           ];
 
           shellHook = ''
-            echo "🚀 Org-mode Website Development Environment"
+            echo "Org-mode Website Development Environment"
             echo ""
             echo "Available commands:"
             echo "  ./build.sh       - Build the website"
