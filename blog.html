@@ -1,0 +1,629 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+<!-- 2026-02-15 Sun 13:50 -->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Manos' Blog</title>
+<meta name="generator" content="Org Mode" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" /><meta http-equiv="Pragma" content="no-cache" /><meta http-equiv="Expires" content="0" /><link rel="stylesheet" href="https://cdn.simplecss.org/simple.min.css" /><link rel="stylesheet" href="static/style.css?v=20260215135041" /><script src="static/hearts.js?v=20260215135041" defer></script>
+</head>
+<body>
+<div id="preamble" class="status">
+<nav class="top-bar">
+  <a href="index.html">Home</a>
+  <a href="blog.html">Blog</a>
+  <a href="https://github.com/mmxgn" target="_blank">Github</a>
+  <a href="https://linkedin.com/in/echourdakis" target="_blank">LinkedIn</a>
+  <a href="static/cv.pdf" target="_blank">CV</a>
+  <a href="https://scholar.google.com/citations?user=Hf0rcRcAAAAJ&hl=en&oi=ao" target="_blank">Scholar</a>
+</nav>
+</div>
+<div id="content" class="content">
+<h1 class="title">Manos&rsquo; Blog</h1>
+<div id="table-of-contents" role="doc-toc">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents" role="doc-toc">
+<ul>
+<li><a href="#orgdd5328c">About</a></li>
+<li><a href="#org33d84fe">Refactoring and porting my Website repo to Nix with Claude</a></li>
+<li><a href="#org57665e0">Run Godot made games/apps on NixOS</a></li>
+<li><a href="#org8dc41ee">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgdd5328c" class="outline-2">
+<h2 id="orgdd5328c">About</h2>
+<div class="outline-text-2" id="text-orgdd5328c">
+<p>
+Here I write about things I usually figure out, such as <code>pytorch</code> development in <code>nix</code>, game development, or anything that piques my interest. If you want to discuss about something, reach me by <a href="mailto:etchourdakis@gmail.com">email</a> or <a href="https://github.com/mmxgn/mmxgn.github.io/issues">github issues</a>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org33d84fe" class="outline-2">
+<h2 id="org33d84fe">Refactoring and porting my Website repo to Nix with Claude</h2>
+<div class="outline-text-2" id="text-org33d84fe">
+<p>
+I am an Emacs user (although with VI bindings) and keep my notes in org-mode using <a href="https://protesilaos.com/emacs/denote">Protesilaos&rsquo; denote</a>. I <i>love</i> Org-mode. To my eyes it&rsquo;s the best note taking system available in software form.
+At some point, I got across a great <a href="https://www.youtube.com/watch?v=AfkrzFodoNw&amp;embeds_referring_euri=https%3A%2F%2Fsystemcrafters.net%2F&amp;source_ve_path=MjM4NTE">video</a> by <a href="https://systemcrafters.net/">SystemCrafters</a> (also available as a post <a href="https://systemcrafters.net/publishing-websites-with-org-mode/building-the-site/">here</a>) which showed how to create a website using Org-mode and <code>org-html-publish-to-html</code> (a function which creates <code>html</code> files from <code>org</code> files)
+so I took some effort to port my then minimal html-only website to org-mode.
+</p>
+</div>
+
+<div id="outline-container-org2a4864d" class="outline-3">
+<h3 id="org2a4864d">The Problem</h3>
+<div class="outline-text-3" id="text-org2a4864d">
+<p>
+The way my website works, and worked before, was that had a custom <code>build.sh</code> shell script together with a <code>build-site.el</code> which was based on the <a href="https://www.youtube.com/watch?v=AfkrzFodoNw&amp;embeds_referring_euri=https%3A%2F%2Fsystemcrafters.net%2F&amp;source_ve_path=MjM4NTE">video</a> by <a href="https://systemcrafters.net/">SystemCrafters</a>.
+This would read the contents in <code>content/</code> and use <code>org-html-publish-to-html</code> to generate the html files under <code>public</code>. Then, I commited <code>public</code> to my github pages repo. This worked fine
+but it had some big issues:
+</p>
+
+<ol class="org-ol">
+<li>The code used for building was not under version control.</li>
+<li>I had to manually call <code>build.sh</code> and then <code>git commit</code> and <code>git push</code> every time I wanted to make an update.</li>
+<li>If I wanted to preview the changes, I would do it with <code>python -m http.serve</code> which works fine but requires a system-wide installed python.</li>
+<li>If I wanted to make a change from another computer, I would need to copy the whole folder, make the changes, and then repeat the steps in 2.</li>
+</ol>
+
+<p>
+Of course this was a bit bothersome to maintain and it kills motivation to write to a degree. To alleviate the issues above, I had already planned some changes
+which I never did:
+</p>
+
+<ol class="org-ol">
+<li>Move the published website to a different repo than <code>main</code> and keep <code>main</code> for the building code.</li>
+<li>Use GITHUB actions to render the website, instead of having to call <code>build.sh</code> every time.</li>
+<li>Since I am using NixOS, create a reproducible environment which locked <code>emacs</code> and <code>python</code> for both rendering and previewing the website.</li>
+</ol>
+
+<p>
+The reason for not fixing these was, I never found the motivation to work on those changes but since I recently got a personal Claude Code subscription to see what it&rsquo;s all about I asked <i>&ldquo;why not?&rdquo;</i>.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org405b42c" class="outline-3">
+<h3 id="org405b42c">Fixing Issues #1, and #2: Setting up a separate branch for publishing and continuous integration with github worfklows.</h3>
+<div class="outline-text-3" id="text-org405b42c">
+<p>
+The first thing to do here, is to create a new branch <code>gh-pages</code> and set github pages to publish from there. See <a href="https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site">here</a>. Then, you must add <code>public/</code> to <code>.gitignore</code> to avoid commiting and pushing it manually (publishing will be done by github workflows from now on):
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span><code>.gitignore</code></label><pre class="src src-:results">...
+# Build artifacts
+public/
+...
+</pre>
+</div>
+
+<p>
+Then, add the following to <code>.github/worfklows/deploy.yaml</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-yaml">name: Build and Deploy Org Site
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual triggers
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper git operations
+
+      - name: Install Emacs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emacs-nox
+
+      - name: Cache Emacs packages
+        uses: actions/cache@v3
+        with:
+          path: .packages
+          key: emacs-packages-${{ hashFiles('build-site.el') }}
+          restore-keys: emacs-packages-
+
+      - name: Build site
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          force_orphan: true  # Keep gh-pages clean
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'build: deploy site from ${{ github.sha }}'
+</pre>
+</div>
+
+<p>
+Commit and push your changes to <code>main</code> now which properly tracks your code. Now every time you commit and push a change (e.g. in <code>content/blog.org</code>) it will be
+picked up by github actions and after a while you will have your website ready at your github-pages appointed url.
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgdd6f9ed" class="outline-3">
+<h3 id="orgdd6f9ed">Fixing Issues #3, and #4: Setting up a Nix Development Environment</h3>
+<div class="outline-text-3" id="text-orgdd6f9ed">
+<p>
+The first thing I asked Claude Code  to do was (after initializing in the repo with <code>init</code>) was to create the <code>flake.nix</code> file. Creating <code>nix</code> environments is my goto litmus test
+for AI assistants since I&rsquo;ve found they tend to fail on these a lot. It passed the test after a while, with some caveats, (I will make a post on the cases where  <code>ClaudeCode~+~Sonnet</code> combination still fails) creating
+two targets <code>build</code> and <code>serve</code>, which you can call with <code>nix run .#&lt;target&gt;</code> and do what you would expect. 
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span><code>flake.nix</code> generated by Claude</label><pre class="src src-nix">{
+  description = "Simple Org-mode Website";
+
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem (system:
+      {
+
+        # Emacs with htmlize which is needed for rendering org mode files
+        emacs-with-packages = ...;
+
+        # The website as a derivation
+        buildSite = pkgs.stdenv.mkDerivation { ... };
+
+        # The serving script
+        serveScript = pkgs.writeShellScriptBin ...;
+
+        # 
+        devShells.default = ...;
+
+        # Build the website to ./result
+        packages.default = ...;
+
+        # Convenient apps
+        apps = {
+          serve = ...;  # Build and serve locally
+        };
+      }
+    );
+}
+</pre>
+</div>
+
+<p>
+Now I could simply run:
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">nix develop      <span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">Enter dev environment
+</span>nix run .#serve  <span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">Build and test locally
+</span>nix build        <span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">Build for deployment</span>
+</pre>
+</div>
+
+<p>
+With this, I solved issues 3, and 4 above.  
+</p>
+</div>
+</div>
+
+<div id="outline-container-org850198a" class="outline-3">
+<h3 id="org850198a">Minor enhancements with Claude Code</h3>
+<div class="outline-text-3" id="text-org850198a">
+<p>
+Having fixed the issues that related to building and deploying the website, I turned my attention to some other isses and enhancements I had in mind:
+</p>
+</div>
+
+<ul class="org-ul">
+<li><a id="org6431e90"></a>Setting up a nicer theme<br />
+<div class="outline-text-4" id="text-org6431e90">
+<p>
+I am quite fond of Deus Ex: Human Revolution. It is one of my favourite games of all times. So, when I saw that someone made a collection of <a href="https://github.com/tomaytotomato/jensen">themes</a> based around its cyber-rennaisance colorscheme, I had to
+add it everywhere, including my website. This was very easy, I just pointed Claude to Jensen&rsquo;s <a href="https://github.com/tomaytotomato/jensen/blob/main/README.md">README.md</a> file, and it did the rest. While I was at it, I replaced the hovering menu on the right with a top bar, set some
+nice transparencies and added a cyber-rennaisancy <a href="static/bg.png">background</a> I quickly made in blender to better match the theme. 
+</p>
+</div>
+</li>
+
+
+<li><a id="org70ef53f"></a>Cache-Busting for Static Assets<br />
+<div class="outline-text-4" id="text-org70ef53f">
+<p>
+One minor, but annoying issue I had was browser caching - visitors would see old CSS/JS even after updates. Claude implemented cache-busting by adding timestamps to asset URLs:
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>Cache-busting in <code>build-site.el</code></label><pre class="src src-emacs-lisp"><span style="font-weight: bold; font-style: italic;">;; </span><span style="font-weight: bold; font-style: italic;">Generate timestamp-based version
+</span>(<span style="font-weight: bold;">defvar</span> <span style="font-weight: bold; font-style: italic;">cache-buster</span> (format-time-string <span style="font-style: italic;">"%Y%m%d%H%M%S"</span>))
+
+(<span style="font-weight: bold;">setq</span> org-html-head
+  (concat
+    <span style="font-style: italic;">"&lt;link rel=\"stylesheet\" href=\"static/style.css?v="</span>
+    cache-buster <span style="font-style: italic;">"\" /&gt;"</span>))
+</pre>
+</div>
+
+<p>
+Every build generates a new timestamp, forcing browsers to load fresh assets.
+</p>
+</div>
+</li>
+</ul>
+</div>
+
+<div id="outline-container-org9de02c7" class="outline-3">
+<h3 id="org9de02c7">The Workflow Now</h3>
+<div class="outline-text-3" id="text-org9de02c7">
+<p>
+My current workflow is beautifully simple:
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>The current workflow</label><pre class="src src-bash"><span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">1. Edit content
+</span>emacs content/blog.org
+
+<span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">2. Test locally
+</span>nix run .#serve
+
+<span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">3. Commit and push
+</span>git add content/blog.org
+git commit -m <span style="font-style: italic;">"feat: add new blog post"</span>
+git push
+
+<span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">GitHub Actions deploys automatically!</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgbe8c0c7" class="outline-3">
+<h3 id="orgbe8c0c7">Using This Setup Yourself</h3>
+<div class="outline-text-3" id="text-orgbe8c0c7">
+<p>
+If you want to build your website the same way on github pages, just <a href="https://github.com/mmxgn/mmxgn.github.io">fork</a> my repo on github, change the content, and follow the README.
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org57665e0" class="outline-2">
+<h2 id="org57665e0">Run Godot made games/apps on NixOS</h2>
+<div class="outline-text-2" id="text-org57665e0">
+<p>
+Trying to run games (or apps) made in Godot in Nixos will result in (in this example <a href="https://deakcor.itch.io/pixelover">Pixelover</a>):
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">mmxgn@emerdesktop ~/Downloads/pixelover-linux-demo $ ./PixelOver.x86_64  
+Could not start dynamically linked executable: ./PixelOver.x86_64
+NixOS cannot run dynamically linked executables intended for generic
+linux environments out of the box. For more information, see:
+https://nix.dev/permalink/stub-ld
+</pre>
+</div>
+
+<p>
+The correct nix approach would be to create a derivation with all the necessary dependencies and patchelf the binaries. However
+noone has time for that. <a href="https://discourse.nixos.org/t/tips-tricks-for-nixos-desktop/28488/2">Here</a>&rsquo;s a solution that has served me well:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-nix">environment.systemPackages = with pkgs; [
+  (let base = pkgs.appimageTools.defaultFhsEnvArgs; in
+    pkgs.buildFHSEnv(base // {
+    name = "fhs";
+    targetPkgs = pkgs: 
+      (base.targetPkgs pkgs) ++ (with pkgs; [
+        pkg-config
+        ncurses
+        zsh
+        mesa
+        libglvnd
+        wayland
+        wayland-protocols
+        glfw
+      ]
+      );
+    LD_LIBRARY_PATH = with pkgs; lib.makeLibraryPath [
+      mesa
+      libglvn
+    ];
+    profile = "export FHS=1";
+    runScript = "zsh";
+    extraOutputsToInstall = ["dev"];
+  }))
+];
+</pre>
+</div>
+
+<p>
+Then by running <code>fhs</code> first, you can simply execute the binary as you would under an FHS-compliant distribution:
+</p>
+<div class="org-src-container">
+<pre class="src src-bash">mmxgn@emerdesktop ~/Downloads/pixelover-linux-demo $ fhs
+mmxgn@emerdesktop ~/Downloads/pixelover-linux-demo $ ./PixelOver.x86_64
+</pre>
+</div>
+
+
+<div id="orgf95199b" class="figure">
+<p><img src="./static/pixelover.png" alt="pixelover.png" />
+</p>
+<p><span class="figure-number">Figure 1: </span>Pixelover is a great app for converting your 3d models to 2d sprites (spaceship model by yours truly).</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org8dc41ee" class="outline-2">
+<h2 id="org8dc41ee">How I work with CUDA and <code>devenv</code> for developing with <code>python/pytorch</code> in NixOS</h2>
+<div class="outline-text-2" id="text-org8dc41ee">
+</div>
+<div id="outline-container-org0e81811" class="outline-3">
+<h3 id="org0e81811">Disclaimer</h3>
+<div class="outline-text-3" id="text-org0e81811">
+<p>
+What I write applies to the following:
+</p>
+
+<ul class="org-ul">
+<li><b>Date</b>: Jan 30, 2025</li>
+<li><b>NixOS version</b> <code>25.05</code> (unstable)</li>
+<li><b>Nixpkgs</b> channel <code>github:nixos/nixpkgs/nixos-unstable</code></li>
+<li><b>Nvidia Drivers / CUDA Version</b>: <code>565.77</code> / <code>12.7</code></li>
+</ul>
+
+<p>
+Your mileage may vary, especially if visiting this article in the future.
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4c1b01f" class="outline-3">
+<h3 id="org4c1b01f">The problem</h3>
+<div class="outline-text-3" id="text-org4c1b01f">
+<p>
+Machine learning with python was one of my big pain with NixOS that occasionally brought me close to abandoning it. There is no single way to make things work and if not using python from <code>nixpkgs</code> it is almost guaranteed to break (e.g. during compilation of <code>numpy</code> or something similar). Furthermore, trying different ways requires writing lots of boilerplate code which can be hard to convince your colleagues to add to the git repo. I have figured two ways to keep my sanity: by <b>using docker</b> and by <b>using devenv</b>. Here I write about the latter while I might write about the former in the future:
+</p>
+</div>
+</div>
+
+<div id="outline-container-org031834a" class="outline-3">
+<h3 id="org031834a"><code>devenv</code> to the rescue</h3>
+<div class="outline-text-3" id="text-org031834a">
+<p>
+I recently came across <a href="https://devenv.sh/">devenv</a> which looks promising as an easy way to let me collaborate with colleagues on ml-based python projects while still using NixOS on my local environment and not having to fight through docker shenanigans (fixing for permissions, working with git repositories, and stuff). It is easy, first include it with:
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span><code>configuration.nix</code></label><pre class="src src-nix">environment.systemPackages = [
+  pkgs.devenv
+];
+</pre>
+</div>
+
+<p>
+Then, after rebuilding from <code>configuration.nix</code>, switch to your repository on your disk and run:
+</p>
+<div class="org-src-container">
+<pre class="src src-nix"># Initialise a devenv package
+devenv init
+</pre>
+</div>
+
+<p>
+And use the following <code>devenv.nix</code>, and <code>devenv.yaml</code> file (remember to change the python version and <code>requirements.txt</code> file):
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span><code>devenv.nix</code></label><pre class="src src-nix">{ pkgs, lib, config, inputs, ... }:
+{
+
+  # Required for compiling numpy
+  packages = [ pkgs.libz ];
+
+  languages.python = {
+    enable = true;
+    version = "3.10";
+    venv.enable = true;
+    venv.requirements = ./requirements.txt;
+  };
+
+  # This is required if you want your module to see cuda
+  env.LD_LIBRARY_PATH = "/run/opengl-driver/lib";
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>devenv.yaml</label><pre class="src src-yaml">inputs:
+  nixpkgs-python:
+    url: github:cachix/nixpkgs-python
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>An example <code>requirements.txt</code> file</label><pre class="src src-pip">numpy
+torch
+torchaudio
+torchvision
+</pre>
+</div>
+
+<p>
+So, finally, after <code>devenv shell</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash">python -c <span style="font-style: italic;">'import torch; print(torch.cuda.is_available())'</span>
+</pre>
+</div>
+
+<pre class="example" id="org4b267e7">
+True
+</pre>
+
+<p>
+Devenv will also modify your <code>.gitignore</code> file to include itself, don&rsquo;t forget to stage it with <code>git stage .gitignore</code>.
+</p>
+<div class="org-src-container">
+<pre class="src src-diff"><span style="font-weight: bold;">diff --git a/.gitignore b/.gitignore
+index 51aa465..7fd8971 100644
+--- </span><span style="font-weight: bold;">a/.gitignore</span><span style="font-weight: bold;">
++++ </span><span style="font-weight: bold;">b/.gitignore</span><span style="font-weight: bold;">
+</span><span style="font-weight: bold;">@@ -33,3 +33,12 @@</span><span style="font-weight: bold;"> build/*</span>
+ **/checkpoint*
+ **/output**.wav
+ **/*.ipynb
++# Devenv
++.devenv*
++devenv.local.nix
++
++# direnv
++.direnv
++
++# pre-commit
++.pre-commit-config.yaml
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge0136cd" class="outline-3">
+<h3 id="orge0136cd">Troubleshoot</h3>
+<div class="outline-text-3" id="text-orge0136cd">
+</div>
+<ul class="org-ul">
+<li><a id="org9d61b61"></a>Importing <code>module</code> fails with <code>ImportError: libXXX.so.X: cannot open shared object file: No such file or directory</code><br />
+<div class="outline-text-4" id="text-org9d61b61">
+<p>
+If you get an error like:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-log">&gt;&gt;&gt; import numpy
+Traceback (most recent call last):
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/__init__.py", line 23, in &lt;module&gt;
+    from . import multiarray
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/multiarray.py", line 10, in &lt;module&gt;
+    from . import overrides
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/overrides.py", line 7, in &lt;module&gt;
+    from numpy._core._multiarray_umath import (
+ImportError: libz.so.1: cannot open shared object file: No such file or directory
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/__init__.py", line 114, in &lt;module&gt;
+    from numpy.__config__ import show_config
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/__config__.py", line 4, in &lt;module&gt;
+    from numpy._core._multiarray_umath import (
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/__init__.py", line 49, in &lt;module&gt;
+    raise ImportError(msg)
+ImportError:
+
+IMPORTANT: PLEASE READ THIS FOR ADVICE ON HOW TO SOLVE THIS ISSUE!
+
+Importing the numpy C-extensions failed. This error can happen for
+many reasons, often due to issues with your setup or how NumPy was
+installed.
+
+We have compiled some common reasons and troubleshooting tips at:
+
+    https://numpy.org/devdocs/user/troubleshooting-importerror.html
+
+Please note and check the following:
+
+  * The Python version is: Python3.10 from "&lt;your-path&gt;/.devenv/state/venv/bin/python"
+  * The NumPy version is: "2.2.2"
+
+and make sure that they are the versions you expect.
+Please carefully study the documentation linked above for further help.
+
+Original error was: libz.so.1: cannot open shared object file: No such file or directory
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "&lt;stdin&gt;", line 1, in &lt;module&gt;
+  File "&lt;your-path&gt;/.devenv/state/venv/lib/python3.10/site-packages/numpy/__init__.py", line 119, in &lt;module&gt;
+    raise ImportError(msg) from e
+ImportError: Error importing numpy: you should not try to import numpy from
+        its source directory; please exit the numpy source tree, and relaunch
+        your python interpreter from there.
+&gt;&gt;&gt;
+</pre>
+</div>
+
+<p>
+The solution is to add the corresponding <code>pkgs.&lt;library&gt;</code> in <code>devenv.nix</code>. If you don&rsquo;t know what that is, you can figure it out with <a href="https://github.com/nix-community/nix-index">nix-locate</a>:
+</p>
+
+<p>
+E.g.:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-bash"><span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">First create the index
+</span>nix-index
+
+<span style="font-weight: bold; font-style: italic;"># </span><span style="font-weight: bold; font-style: italic;">Then find the corresponding package
+</span>nix-locate <span style="font-style: italic;">'libz.so.1'</span>
+</pre>
+</div>
+
+<pre class="example" id="org3c653c0">
+...
+zlib.out                                              0 s /nix/store/jb442jir0a2x7zsk0d63xb6rh8p280ai-zlib-1.3.1/lib/libz.so.1
+zlib.out                                        128,584 x /nix/store/jb442jir0a2x7zsk0d63xb6rh8p280ai-zlib-1.3.1/lib/libz.so.1.3.1
+...
+libz.out                                              0 s /nix/store/x4hgdkl1i7x76phgkqv24m70jawqa7jm-libz-1.2.8.2015.12.26-unstable-2018-03-31/lib/libz.so.1
+libz.out                                        107,680 r /nix/store/x4hgdkl1i7x76phgkqv24m70jawqa7jm-libz-1.2.8.2015.12.26-unstable-2018-03-31/lib/libz.so.1.2.8
+...
+</pre>
+
+<p>
+And now you can add <code>pkgs.libz</code> to <code>devenv.nix</code>:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-:results">...
+packages = [ pkgs.libz ];
+...
+</pre>
+</div>
+
+<p>
+Another usual suspect is <code>cv2</code> which requires <code>pkgs.libGL</code> and <code>pkgs.glib</code>.
+</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<div class="jensen-credit">
+  Made with <a href="https://www.gnu.org/software/emacs/" target="_blank">Emacs</a> and <a href="https://orgmode.org/" target="_blank">Org-mode</a>, and polished by <a href="https://claude.ai/" target="_blank">Claude</a>. Colorscheme by <a href="https://github.com/tomaytotomato/jensen" target="_blank">Jensen Theme</a>.
+</div>
+</div>
+</body>
+</html>
