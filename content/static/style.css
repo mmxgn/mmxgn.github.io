@@ -108,9 +108,19 @@ pre {
 
 article {
   align-content: center;
-  width: 85ch;
+  max-width: 900px;
+  width: 90%;
   margin-left: auto;
   margin-right: auto;
+  padding: 0 20px;
+}
+
+/* Mobile: use even more width */
+@media (max-width: 768px) {
+  article {
+    width: 95%;
+    padding: 0 10px;
+  }
 }
 
 
@@ -175,40 +185,52 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--jensen-gold);
 }
 
-/* Style for the floating box */
-.floating-box {
+/* Top Bar Navigation */
+.top-bar {
+    background-color: rgba(20, 21, 20, 0.9);
+    border-bottom: 2px solid var(--jensen-gold);
+    padding: 15px 30px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
     position: fixed;
-    top: 50px; /* You can adjust this */
-    right: 50px; /* Distance from the right edge */
-    width: 100px;
-    padding: 20px;
-    border-radius: 8px;
-/*    background-color: #2E3440; */
-/*    color: #ECEFF4; */
-    z-index: 1000; /* Keeps it above other content */
-}
-
-/* Style for the profile photo */
-.profile-photo {
+    top: 0;
+    left: 0;
+    right: 0;
     width: 100%;
-    height: auto;
-    border-radius: 50%; /* Makes the image circular */
-    margin-bottom: 15px;
+    z-index: 1000;
 }
 
-/* Style for the links */
-.links {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+/* Add padding to body to prevent content from hiding under fixed bar */
+body {
+    padding-top: 60px;
 }
 
-.links li {
-    margin: 10px 0;
-}
-
-.links li a {
+.top-bar a {
+    color: var(--jensen-light-gold);
     text-decoration: none;
-    font-weight: bold;
+    font-size: 14px;
+    padding: 5px 10px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.top-bar a:hover {
+    color: var(--jensen-gold);
+    background-color: rgba(237, 166, 34, 0.1);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .top-bar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .top-bar-links {
+        justify-content: center;
+    }
 }
 
