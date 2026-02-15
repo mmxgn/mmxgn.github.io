@@ -33,8 +33,23 @@
           '';
         };
 
-        # Serve script for local testing
+        # Serve script (no browser)
         serveScript = pkgs.writeShellScriptBin "serve-site" ''
+          echo "Building site..."
+          ${pkgs.emacs-nox}/bin/emacs -Q --script build-site.el
+
+          echo ""
+          echo "Site built successfully!"
+          echo "Starting local server at http://localhost:8000"
+          echo "Press Ctrl+C to stop"
+          echo ""
+
+          cd public
+          ${pkgs.python3}/bin/python -m http.server 8000
+        '';
+
+        # Default: serve + open browser
+        defaultScript = pkgs.writeShellScriptBin "serve-and-open" ''
           echo "Building site..."
           ${pkgs.emacs-nox}/bin/emacs -Q --script build-site.el
 
@@ -82,9 +97,16 @@
         packages.default = buildSite;
 
         # Runnable apps
-        apps.serve = {
-          type = "app";
-          program = "${serveScript}/bin/serve-site";
+        apps = {
+          default = {
+            type = "app";
+            program = "${defaultScript}/bin/serve-and-open";
+          };
+
+          serve = {
+            type = "app";
+            program = "${serveScript}/bin/serve-site";
+          };
         };
       }
     );
