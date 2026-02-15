@@ -1,5 +1,6 @@
 #+title: Emmanouil Theofanis Chourdakis
 #+date: <2024-10-06 Κυρ>
+#+OPTIONS: toc:nil
 
 * New website and blog
 :PROPERTIES:
