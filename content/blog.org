@@ -16,17 +16,17 @@ The way my website works, and worked before, was that had a custom ~build.sh~ sh
 This would read the contents in ~content/~ and use ~org-html-publish-to-html~ to generate the html files under ~public~. Then, I commited ~public~ to my github pages repo. This worked fine
 but it had some big issues:
 
-+ The code used for building was not under version control.
-+ I had to manually call ~build.sh~ and then ~git commit~ and ~git push~ every time I wanted to make an update.
-+ If I wanted to preview the changes, I would do it with ~python -m http.serve~ which works fine but requires a system-wide installed python.
-+ If I wanted to make a change from another computer, I would need to copy the whole folder, make the changes, and then repeat the steps in 2.
+1. The code used for building was not under version control.
+2. I had to manually call ~build.sh~ and then ~git commit~ and ~git push~ every time I wanted to make an update.
+3. If I wanted to preview the changes, I would do it with ~python -m http.serve~ which works fine but requires a system-wide installed python.
+4. If I wanted to make a change from another computer, I would need to copy the whole folder, make the changes, and then repeat the steps in 2.
 
 Of course this was a bit bothersome to maintain and it kills motivation to write to a degree. To alleviate the issues above, I had already planned some changes
 which I never did:
 
-+ Move the published website to a different repo than ~main~ and keep ~main~ for the building code.
-+ Use GITHUB actions to render the website, instead of having to call ~build.sh~ every time.
-+ Since I am using NixOS, create a reproducible environment which locked ~emacs~ and ~python~ for both rendering and previewing the website.
+1. Move the published website to a different repo than ~main~ and keep ~main~ for the building code.
+2. Use GITHUB actions to render the website, instead of having to call ~build.sh~ every time.
+3. Since I am using NixOS, create a reproducible environment which locked ~emacs~ and ~python~ for both rendering and previewing the website.
 
 The reason for not fixing these was, I never found the motivation to work on those changes but since I recently got a personal Claude Code subscription to see what it's all about I asked /"why not?"/.
 

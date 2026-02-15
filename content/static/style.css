@@ -104,7 +104,18 @@ ul, ol {
   max-width: calc(100% - 80px);
 }
 
-li {
+ul li {
+  list-style: disc;
+  margin-left: 20px;
+}
+
+ol li {
+  list-style: decimal;
+  margin-left: 20px;
+}
+
+/* Remove bullets from nav lists */
+nav li {
   list-style: none;
 }
 
@@ -136,7 +147,18 @@ nav {
   text-align: center;
 }
 
-li {
+ul li {
+  list-style: disc;
+  margin-left: 20px;
+}
+
+ol li {
+  list-style: decimal;
+  margin-left: 20px;
+}
+
+/* Remove bullets from nav lists */
+nav li {
   list-style: none;
 }
 
