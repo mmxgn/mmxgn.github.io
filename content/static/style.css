@@ -108,8 +108,8 @@ pre {
 
 article {
   align-content: center;
-  max-width: 900px;
-  width: 90%;
+  max-width: none;
+  width: 97%;
   margin-left: auto;
   margin-right: auto;
   padding: 0 20px;
@@ -118,7 +118,7 @@ article {
 /* Mobile: use even more width */
 @media (max-width: 768px) {
   article {
-    width: 95%;
+    width: 97%;
     padding: 0 10px;
   }
 }
@@ -185,6 +185,31 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--jensen-gold);
 }
 
+/* Floating hearts animation */
+.floating-heart {
+  position: absolute;
+  bottom: 0;
+  font-size: 20px;
+  color: #ff1493;
+  pointer-events: none;
+  animation: floatUp 2s ease-out forwards;
+  opacity: 1;
+}
+
+@keyframes floatUp {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100px) scale(1.5);
+    opacity: 0;
+  }
+}
+
 /* Top Bar Navigation */
 .top-bar {
     background-color: rgba(20, 21, 20, 0.9);
@@ -204,7 +229,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Add padding to body to prevent content from hiding under fixed bar */
 body {
-    padding-top: 60px;
+    padding-top: 80px;
 }
 
 .top-bar a {
@@ -221,16 +246,30 @@ body {
     background-color: rgba(237, 166, 34, 0.1);
 }
 
-/* Responsive */
+/* Mobile: different behavior */
 @media (max-width: 768px) {
+    /* Make header scroll with content on mobile */
     .top-bar {
+        position: relative;
         flex-direction: column;
-        gap: 15px;
-        padding: 15px;
+        gap: 10px;
+        padding: 10px 15px;
     }
 
-    .top-bar-links {
-        justify-content: center;
+    /* Remove body padding since header is no longer fixed */
+    body {
+        padding-top: 0;
+    }
+
+    /* Full width content on mobile */
+    article {
+        width: 100% !important;
+        padding: 0 10px !important;
+    }
+
+    p, ul, ol {
+        margin-left: 10px;
+        margin-right: 10px;
     }
 }
 

@@ -78,7 +78,8 @@
       org-html-head-include-default-style nil ;; Use our own styles
       org-html-head (concat
                      "<link rel=\"stylesheet\" href=\"https://cdn.simplecss.org/simple.min.css\" />"
-                     "<link rel=\"stylesheet\" href=\"static/style.css\" />"))
+                     "<link rel=\"stylesheet\" href=\"static/style.css\" />"
+                     "<script src=\"static/hearts.js\" defer></script>"))
 ;; (setq org-html-postamble 'nil)
 
 (defun load-file-as-string (file-path)
