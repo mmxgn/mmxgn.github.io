@@ -11,12 +11,23 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        # Build script
-        buildScript = pkgs.writeShellScriptBin "build-site" ''
-          echo "Building Org-mode website..."
-          ${pkgs.emacs-nox}/bin/emacs -Q --script build-site.el
-          echo "Build complete! Output in ./public/"
-        '';
+        # Build the website as a derivation
+        buildSite = pkgs.stdenv.mkDerivation {
+          name = "org-mode-website";
+          src = ./.;
+
+          buildInputs = [ pkgs.emacs-nox ];
+
+          buildPhase = ''
+            mkdir -p .packages
+            ${pkgs.emacs-nox}/bin/emacs -Q --script build-site.el
+          '';
+
+          installPhase = ''
+            mkdir -p $out
+            cp -r public/* $out/
+          '';
+        };
 
         # Serve script for local testing
         serveScript = pkgs.writeShellScriptBin "serve-site" ''
@@ -47,8 +58,7 @@
             echo "Org-mode Website Development Environment"
             echo ""
             echo "Available commands:"
-            echo "  ./build.sh       - Build the website"
-            echo "  nix run .#build  - Build the website (via Nix)"
+            echo "  nix build        - Build to ./result"
             echo "  nix run .#serve  - Build and serve on http://localhost:8000"
             echo ""
             echo "Directory structure:"
@@ -58,17 +68,13 @@
           '';
         };
 
-        # Runnable apps
-        apps = {
-          build = {
-            type = "app";
-            program = "${buildScript}/bin/build-site";
-          };
+        # Build output
+        packages.default = buildSite;
 
-          serve = {
-            type = "app";
-            program = "${serveScript}/bin/serve-site";
-          };
+        # Runnable apps
+        apps.serve = {
+          type = "app";
+          program = "${serveScript}/bin/serve-site";
         };
       }
     );
