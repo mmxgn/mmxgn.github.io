@@ -13,6 +13,32 @@
   --jensen-light-gold: #F2E2BA;   /* Dutch White - Light gold */
   --jensen-dark-gold: #503A1D;    /* Café Noir - Dark gold shadows */
   --jensen-medium-gold: #BB831B;  /* Dark Goldenrod - Medium gold */
+
+  /* Override Simple.css variables to force Jensen theme */
+  --bg: #000000 !important;
+  --text: #FBFBFB !important;
+  --accent: #EDA622 !important;
+  --accent-hover: #E55D02 !important;
+  --code: #A0FF33 !important;
+  --preformatted: #FBFBFB !important;
+}
+
+/* Force Jensen colors even when device prefers dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: light dark;
+    --bg: #000000 !important;
+    --text: #FBFBFB !important;
+    --accent: #EDA622 !important;
+    --accent-hover: #E55D02 !important;
+    --code: #A0FF33 !important;
+    --preformatted: #FBFBFB !important;
+  }
+
+  /* Prevent Simple.css from dimming images */
+  img, video {
+    opacity: 1 !important;
+  }
 }
 
 html {
