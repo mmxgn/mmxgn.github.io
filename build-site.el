@@ -107,6 +107,10 @@
 
 (setq org-html-postamble (load-file-as-string "content/static/postamble.html"))
 (setq python-indent-offset 4)
+
+;; Disable code execution during export (for Nix builds)
+(setq org-export-babel-evaluate nil)
+
 ;; Generate the site output
 (org-publish-all t)
 (message "Build complete!")

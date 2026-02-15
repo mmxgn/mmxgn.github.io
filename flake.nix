@@ -11,16 +11,20 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
+        # Emacs with required packages
+        emacs-with-packages = (pkgs.emacsPackagesFor pkgs.emacs-nox).emacsWithPackages (epkgs: [ epkgs.htmlize ]);
+
         # Build the website as a derivation
         buildSite = pkgs.stdenv.mkDerivation {
           name = "org-mode-website";
           src = ./.;
 
-          buildInputs = [ pkgs.emacs-nox ];
+          buildInputs = [ emacs-with-packages ];
 
           buildPhase = ''
+            export HOME=$TMPDIR
             mkdir -p .packages
-            ${pkgs.emacs-nox}/bin/emacs -Q --script build-site.el
+            ${emacs-with-packages}/bin/emacs -Q --script build-site.el
           '';
 
           installPhase = ''
