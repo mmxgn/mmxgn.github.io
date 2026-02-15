@@ -1,0 +1,102 @@
+html {
+  font-family: Iosevka Light, Terminus, monospace;
+  font-size: 15px;
+}
+
+header {
+  text-align: center;
+}
+
+footer {
+  text-align: center;
+}
+
+
+time {
+  text-align: center;
+}
+
+p {
+  text-align: left;
+  margin-left: 40px;
+  margin-right: 40px;
+}
+
+pre {
+  text-align: left;
+  align-content: center;  
+
+}
+
+article {
+  align-content: center;
+  width: 85ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+nav {
+  text-align: center;
+}
+
+li {
+  list-style: none;
+}
+
+.selected {
+  font-weight: bolder;
+}
+
+a:hover {
+}
+
+pre {
+  font-family: Terminus, Lucida Typewriter, monospace;
+  font-size: 13px;
+}
+
+.tag {
+  font-style: italic;
+  font-weight: 100;
+  font-size: smaller;
+  color: ;
+}
+
+/* Style for the floating box */
+.floating-box {
+    position: fixed;
+    top: 50px; /* You can adjust this */
+    right: 50px; /* Distance from the right edge */
+    width: 100px;
+    padding: 20px;
+    border-radius: 8px;
+/*    background-color: #2E3440; */
+/*    color: #ECEFF4; */
+    z-index: 1000; /* Keeps it above other content */
+}
+
+/* Style for the profile photo */
+.profile-photo {
+    width: 100%;
+    height: auto;
+    border-radius: 50%; /* Makes the image circular */
+    margin-bottom: 15px;
+}
+
+/* Style for the links */
+.links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.links li {
+    margin: 10px 0;
+}
+
+.links li a {
+    text-decoration: none;
+    font-weight: bold;
+}
+

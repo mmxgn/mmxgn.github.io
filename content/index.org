@@ -1,0 +1,23 @@
+#+title: Emmanouil Theofanis Chourdakis
+#+date: <2024-10-06 Κυρ>
+
+* New website and blog
+:PROPERTIES:
+:CREATED:: <2024-10-06 Κυρ>
+:END:
+New website powered by [[https://orgmode.org/][org-mode]]. Also, [[file:blog.org][blog]]!
+* About me
+
+Hi!
+
+My name is Emmanouil Theofanis Chourdakis (Greek: Εμμανουήλ-Θεοφάνης Χουρδάκης) and I am an Electronic Engineer from Greece currently living in Stockholm, Sweden with my better half [[https://beiciliang.github.io/][Beici♥]].
+
+I work as a Machine Learning Engineer at [[https://www.epidemicsound.com/][Epidemic Sound]] making cool stuff at the forefront of generative machine learning and audio signal processing.
+
+Previously, I worked as an Audio Software Engineer at [[https://nomono.co/][Nomono]] where I contributed as an audio developer to their next generation audio speech enhancement pipeline. Aside from that, I partook in [[https://www.unite.ai/the-future-of-podcasting-is-ai/][thought leadership]] articles as well as patent filings.
+
+I received my Dipl-Ing., from the [[https://www.tuc.gr][Technical University of Crete]], and both my MSc and PhD from [[https://www.qmul.ac.uk/][Queen Mary University of London]] as part of the [[https://www.c4dm.eecs.qmul.ac.uk/research/labs/intelligentsoundengineering/][intelligent sound engineering lab]]. I also briefly interned at [[https://www.bbc.com/rd/index.html][BBC Audio R&D]]  as part of their [[https://www.bbc.co.uk/rd/projects/audio-research-partnership][Audio Research Partnership]] program, doing some cool research on Object-based audio and Machine Learning for Speech Intelligibility.
+
+I have programmed in an array of programming languages in the past, but currently I am focusing on ~python~ together with ~pytorch~.
+
+I speak Greek, English, un peut du français, og litt norsk. On my spare time I am constantly changing hobbies. I recently however gravitate around Game Development. You can contact me through my LinkedIn profile, or at etchoudakis@gmail.com.

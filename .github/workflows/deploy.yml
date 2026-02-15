@@ -1,0 +1,46 @@
+name: Build and Deploy Org Site
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual triggers
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for proper git operations
+
+      - name: Install Emacs
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y emacs-nox
+
+      - name: Cache Emacs packages
+        uses: actions/cache@v3
+        with:
+          path: .packages
+          key: emacs-packages-${{ hashFiles('build-site.el') }}
+          restore-keys: emacs-packages-
+
+      - name: Build site
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
+          force_orphan: true  # Keep gh-pages clean
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'build: deploy site from ${{ github.sha }}'

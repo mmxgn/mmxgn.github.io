@@ -1,0 +1,77 @@
+body {
+  background-color: #2E3440;
+  color: #ECEFF4;
+}
+
+
+div {
+  background-color: #2E3440;
+  color: #ECEFF4;
+}
+
+::selection {
+}
+
+::-moz-selection {
+}
+
+html {
+  font-family: Iosevka Light, Terminus, monospace;
+  font-size: 15px;
+}
+
+header {
+  text-align: center;
+}
+
+footer {
+  text-align: center;
+}
+
+
+time {
+  text-align: center;
+}
+
+p {
+  text-align: left;
+  margin-left: 40px;
+  margin-right: 40px;
+}
+
+pre {
+  text-align: left;
+  align-content: center;  
+
+}
+
+article {
+  align-content: center;
+  width: 85ch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+a {
+  color: #EBCB8B;
+}
+
+nav {
+  text-align: center;
+}
+
+li {
+  list-style: none;
+}
+
+.selected {
+  font-weight: bolder;
+}
+
+a:hover {
+}
+
+pre {
+  font-family: Terminus, Lucida Typewriter, monospace;
+  font-size: 13px;
+}

@@ -1,0 +1,24 @@
+# Build artifacts
+public/
+
+# Emacs packages
+.packages/
+
+# Emacs backup files
+*~
+.#*
+\#*\#
+
+# Org-mode temp files
+.org-id-locations
+*.org~
+*.org.~undo-tree~
+
+# Nix
+result
+result-*
+.direnv/
+
+# OS files
+.DS_Store
+Thumbs.db

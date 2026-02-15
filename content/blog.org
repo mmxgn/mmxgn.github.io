@@ -1,0 +1,513 @@
+#+title: Manos' Blog
+#+OPTIONS: toc:t
+
+* About
+Here I write about things I usually figure out, such as ~pytorch~ development in ~nix~, game development, or anything that piques my interest. If you want to discuss about something, reach me by [[mailto:etchourdakis@gmail.com][email]] or [[https://github.com/mmxgn/mmxgn.github.io/issues][github issues]].
+
+* Developing with python and ~eglot~ using ~tramp~
+
+** TODO Describe the issue
+
+- [ ] Working remote with python
+- [ ] Working with emacs/eglot+tramp
+- [ ] No sudo access (even nix).
+- [ ] Have docker 
+
+** TODO Build a docker image with ~python-language-server~
+
+#+caption: Dockerfile
+#+begin_src docker :results raw :wrap example :exports both
+FROM python:3.11-slim-bookworm
+RUN pip install python-lsp-server[all]
+CMD ["pylsp"]
+#+end_src
+
+
+** TODO Make sure it loads when calling ~eglot~
+
+** TODO Next steps: Build a cuda compatible development environment
+
+
+** References
+- [ ]  https://nlited.de/using-helix-editor-with-a-dockerized-python-lsp
+
+* Simulating VSCode's ~launch.json~ on Emacs with ~realgud~ and ~elgot~.
+
+** Disclaimer 
+This has been tested on Emacs 30.2 installed on NixOS using the [[https://github.com/nix-community/emacs-overlay][Emacs Overlay]]. Your mileage might vary
+
+** Instructions
+Install [[https://github.com/realgud/realgud][realgud]] somehow. Its website has instructions on how to do it on non-nix systems. Below is how
+I use it:
+
+#+CAPTION: ~emacs.nix~
+#+begin_src nix :results raw :wrap example :exports both
+  {
+    config,
+    pkgs,
+    inputs,
+    ...
+  }:
+  {
+    programs.emacs = {
+      enable = true;
+      package = (
+        pkgs.emacsWithPackagesFromUsePackage {
+          config = ./configs/init.el;
+          defaultInitFile = true;
+          package = pkgs.emacs30-pgtk;
+          extraEmacsPackages = epkgs: with epkgs; [ realgud ];
+        }
+      );
+    };
+  }
+#+end_src
+
+and enable it simply by:
+
+#+CAPTION: ~init.el~
+#+begin_src emacs-lisp :results raw :wrap example :exports both
+(require 'realgud) 
+#+end_src
+
+** Add 
+
+
+
+
+
+   
+
+* NixOS: Using a beefy desktop to build packages for raspberry pi :noexport:
+** The Problem
+In my home network, I have a Raspberry Pi 400 as my media server / emuation station which
+runs (of course) NixOS. Unfortunately, an issue I have is that when I run ~nh os boot --update~,
+it takes forever, especially if I am updating a package which needs compilation. Below I give simple instructions on
+how to overcome this issue by showing how to set up the Desktop PC (running NixOS) to build packages for my Raspberry Pi.
+
+** Specification 
+
+Both the *Desktop PC* *Raspberry Pi 400* running NixOS 25.05 (unstable). They're connected through Wi-Fi, and can see each other
+through a tailscale network via hostnames ~desktop~, and ~rpi400~.
+
+** Setting up cross-compilation for the desktop
+
+The first step, is to set up ~desktop~ for cross-compilation of arm packages. This can be done by adding the following to the
+NixOS configuration (I am using modules but copy/pasting the body of the modules directly in ~configuration.nix~ will work).
+
+#+begin_src nix
+
+#+end_src
+
+** Setting up a remote builder
+
+On ~rpi400~, create an SSH key pair:
+
+#+begin_src bash
+[root@pi:~]# ssh-keygen -f /root/.ssh/remotebuild
+Generating public/private ed25519 key pair.
+Enter passphrase for "/root/.ssh/remotebuild" (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /root/.ssh/remotebuild
+Your public key has been saved in /root/.ssh/remotebuild.pub
+The key fingerprint is:
+SHA256:sOm4t3V0yMirUKft6HJhA/WHkPW1ND5vr+4xdc2Uvso root@pi
+The key's randomart image is:
++--[ED25519 256]--+
+|       o.   +    |
+|      +  . + o  .|
+|     ..o .. +  ..|
+|    .  =oo.. o.o.|
+|     .+ S.+ . o.=|
+|     +++ o . . oo|
+|    o.oo+ .   o..|
+|    .oo= .  . .+ |
+|    .==..    E+  |
++----[SHA256]-----+
+#+end_src
+
+Copy ~remo
+
+Create the following module (or add the options directly to ~configuration.nix~):
+#+CAPTION: ~remote-build.nix~
+#+begin_src nix 
+{ nix, users, ... }:
+{
+  users.users.remotebuild = {
+    isNormalUser = true;
+    createHome = false;
+    group = "remotebuild";
+    openssh.authorizedKeys.keyFiles = [ ./remotebuild.pub ];
+  };
+
+  users.groups.remotebuild = { };
+  nix.settings.trusted-users = [ "remotebuild" ];
+}
+#+end_src
+
+Make sure that ~remote-build.nix~ and ~remotebuild.pub~ is on the same directory as the module, and that it is tracked by git (adapt accordingly
+for ~configuration.nix~).
+
+You should now check that you can access ~desktop~ from ~rpi400~ using the ~remotebuild~ private key:
+
+#+begin_src bash
+ # From rpi400
+ ssh remotebuild@desktop -i /root/.ssh/remotebuild "echo hello"
+ hello
+ Could not chdir to home directory /home/remotebuild: No such file or directory
+#+end_src
+
+Ignore the last error message, it just confirms that user ~remotebuild~ bas no home directory, as directed by ~createHome = false;~ above.
+
+Finally, set the following to ~rpi400~'s config:
+
+#+begin_src nix
+  # Force the system to build remotely
+  nix.settings.cores = 0;
+  nix.settings.max-jobs = 0;
+#+end_src
+
+** References
+- https://nix.dev/tutorials/nixos/distributed-builds-setup.html
+- https://blog.thalheim.io/2022/11/27/cross-compiling-and-deploying-nixos/
+
+
+* Run Godot made games/apps on NixOS 
+Trying to run games (or apps) made in Godot in Nixos will result in (in this example [[https://deakcor.itch.io/pixelover][Pixelover]]):
+#+begin_src bash
+mmxgn@emerdesktop ~/Downloads/pixelover-linux-demo $ ./PixelOver.x86_64  
+Could not start dynamically linked executable: ./PixelOver.x86_64
+NixOS cannot run dynamically linked executables intended for generic
+linux environments out of the box. For more information, see:
+https://nix.dev/permalink/stub-ld
+#+end_src
+
+The correct nix approach would be to create a derivation with all the necessary dependencies and patchelf the binaries. However
+noone has time for that. [[https://discourse.nixos.org/t/tips-tricks-for-nixos-desktop/28488/2][Here]]'s a solution that has served me well:
+
+#+begin_src nix
+  environment.systemPackages = with pkgs; [
+    (let base = pkgs.appimageTools.defaultFhsEnvArgs; in
+      pkgs.buildFHSEnv(base // {
+      name = "fhs";
+      targetPkgs = pkgs: 
+        (base.targetPkgs pkgs) ++ (with pkgs; [
+          pkg-config
+          ncurses
+          zsh
+          mesa
+          libglvnd
+          wayland
+          wayland-protocols
+          glfw
+        ]
+        );
+      LD_LIBRARY_PATH = with pkgs; lib.makeLibraryPath [
+        mesa
+        libglvn
+      ];
+      profile = "export FHS=1";
+      runScript = "zsh";
+      extraOutputsToInstall = ["dev"];
+    }))
+  ];
+#+end_src
+
+Then by running ~fhs~ first, you can simply execute the binary as you would under an FHS-compliant distribution:
+#+begin_src bash
+    mmxgn@emerdesktop ~/Downloads/pixelover-linux-demo $ fhs
+    mmxgn@emerdesktop ~/Downloads/pixelover-linux-demo $ ./PixelOver.x86_64
+#+end_src
+
+#+CAPTION: Pixelover is a great app for converting your 3d models to 2d sprites (spaceship model by yours truly).
+[[./static/pixelover.png]]
+* *WIP* Building a new website with Org-mode :noexport:
+** Prelude
+My previous website was made in html. I had made the deliberate choice not to use a framework such as /Hugo/ or /Pelican/ since they seemed overly complicated for what I wanted to do: /Have a central point of information about me, for people wanting to hire me/. I believe I have grown out of it however since I need something akin to a blog. I constantly come across interesting stuff and problems that I solve and I would like to share them with others.
+
+
+** Why Org-mode of all?
+I have been using ~org-mode~ all along as a note-taking and app for writing documentation. I have written most of my notes in ~org~ already so sharing something should come with minimal overhead and thus I will be more motivated to share. Furthermore, I love ~org~'s simplicity, ability to beautifully interpolate code blocks, /images/, /math/, even /graphs/ within text. See e.g. Listing [[listing1]] and Formula [[dft]]
+
+#+caption: Example python code highlighting
+#+name: listing1
+#+begin_src python :results raw :wrap src :exports both
+import numpy as np
+def dft(xn: np.ndarray) -> np.ndarray:
+    """
+    Computes the discrete fourier transform
+    """
+    N = K = xn.shape[-1]
+    xk = np.zeros(K, dtype='complex')
+    for k in range(K):
+        xk[k] = np.sum(xn * np.exp(-2*1j*np.pi*k/N * np.arange(N)))
+    return xk
+return dft(np.array([1,2,3,4]))
+#+end_src
+
+#+CAPTION: Results
+#+RESULTS: listing1
+#+begin_src
+[10.+0.00000000e+00j -2.+2.00000000e+00j -2.-9.79717439e-16j
+ -2.-2.00000000e+00j]
+#+end_src
+
+
+
+#+CAPTION: The Discrete Fourier Transform
+#+NAME: dft
+#+BEGIN_CENTER
+\begin{equation}
+\label{dft}
+X_{k} = \sum_{n=0}^{N-1}x_{n}\exp\{-2j\pi \frac{k}{N}n\}
+\end{equation}
+#+END_CENTER
+** Automating Deployment
+
+My plan is to take publishing a little bit further than just a website and a blog. Since I am writing stuff in ~org-mode~ and I am using ~emacs~, there is no reason why I wouldn't be able to maintain in ~org~, e.g. my CV as well.
+
+#+begin_src dot :results raw :wrap attr_html :exports results :eval no-export :file static/plan.png
+digraph plan {
+             rankdir = "LR";
+        A[label="Write .org files" shape="box"];
+        B[label="Git commit/push" shape="box"];
+        C[label="Produce .html files" shape="box"];
+        D[label="Produce .pdf files" shape="box"];
+        E[label="Publish"];
+
+        A -> B -> {C, D} -> E;
+
+}
+#+end_src
+
+#+RESULTS:
+#+begin_attr_html
+[[file:static/plan.png]]
+#+end_attr_html
+
+My goal is to simplify deployment by using Github actions. I do not want to run a script in order to generate ~html~ code, rather i would like github actions to do that for me.
+* How I work with CUDA and ~devenv~ for developing with ~python/pytorch~ in NixOS
+
+** Disclaimer
+What I write applies to the following:
+
+ - *Date*: Jan 30, 2025
+ - *NixOS version* =25.05= (unstable)
+ - *Nixpkgs* channel ~github:nixos/nixpkgs/nixos-unstable~
+ - *Nvidia Drivers / CUDA Version*: =565.77= / =12.7=
+
+Your mileage may vary, especially if visiting this article in the future.
+
+** The problem
+
+Machine learning with python was one of my big pain with NixOS that occasionally brought me close to abandoning it. There is no single way to make things work and if not using python from ~nixpkgs~ it is almost guaranteed to break (e.g. during compilation of ~numpy~ or something similar). Furthermore, trying different ways requires writing lots of boilerplate code which can be hard to convince your colleagues to add to the git repo. I have figured two ways to keep my sanity: by *using docker* and by *using devenv*. Here I write about the latter while I might write about the former in the future:
+
+** ~devenv~ to the rescue
+I recently came across [[https://devenv.sh/][devenv]] which looks promising as an easy way to let me collaborate with colleagues on ml-based python projects while still using NixOS on my local environment and not having to fight through docker shenanigans (fixing for permissions, working with git repositories, and stuff). It is easy, first include it with:
+
+#+CAPTION: ~configuration.nix~
+#+begin_src nix :results raw :wrap example :exports both :eval no-export
+environment.systemPackages = [
+  pkgs.devenv
+];
+#+end_src
+
+Then, after rebuilding from ~configuration.nix~, switch to your repository on your disk and run:
+#+begin_src nix :results raw :wrap example :exports both :eval no-export
+# Initialise a devenv package
+devenv init
+#+end_src
+
+And use the following ~devenv.nix~, and ~devenv.yaml~ file (remember to change the python version and ~requirements.txt~ file):
+
+#+CAPTION: ~devenv.nix~
+#+begin_src nix :results raw :wrap example :exports both :eval no-export
+{ pkgs, lib, config, inputs, ... }:
+{
+
+  # Required for compiling numpy
+  packages = [ pkgs.libz ];
+
+  languages.python = {
+    enable = true;
+    version = "3.10";
+    venv.enable = true;
+    venv.requirements = ./requirements.txt;
+  };
+
+  # This is required if you want your module to see cuda
+  env.LD_LIBRARY_PATH = "/run/opengl-driver/lib";
+}
+  #+end_src
+
+ #+CAPTION: devenv.yaml
+ #+begin_src yaml :results raw :wrap example :exports both :eval no-export
+inputs:
+  nixpkgs-python:
+    url: github:cachix/nixpkgs-python
+    inputs:
+      nixpkgs:
+        follows: nixpkgs
+  nixpkgs:
+    url: github:cachix/devenv-nixpkgs/rolling
+
+ #+end_src
+
+ #+CAPTION: An example ~requirements.txt~ file
+ #+begin_src pip :results raw :wrap example :exports both :eval no-export
+numpy
+torch
+torchaudio
+torchvision
+ #+end_src
+
+So, finally, after ~devenv shell~:
+
+#+begin_src bash :results raw :wrap example :exports both :eval no-export
+python -c 'import torch; print(torch.cuda.is_available())'
+#+end_src
+
+#+RESULTS:
+#+begin_example
+True
+#+end_example
+
+Devenv will also modify your ~.gitignore~ file to include itself, don't forget to stage it with ~git stage .gitignore~.
+#+begin_src diff :results raw :wrap example :exports both :eval no-export
+diff --git a/.gitignore b/.gitignore
+index 51aa465..7fd8971 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -33,3 +33,12 @@ build/*
+ **/checkpoint*
+ **/output**.wav
+ **/*.ipynb
++# Devenv
++.devenv*
++devenv.local.nix
++
++# direnv
++.direnv
++
++# pre-commit
++.pre-commit-config.yaml
+#+end_src
+
+** Troubleshoot
+*** Importing ~module~ fails with ~ImportError: libXXX.so.X: cannot open shared object file: No such file or directory~
+If you get an error like:
+
+#+begin_src log :results raw :wrap example :exports both :eval no-export
+>>> import numpy
+Traceback (most recent call last):
+  File "<your-path>/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/__init__.py", line 23, in <module>
+    from . import multiarray
+  File "<your-path>/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/multiarray.py", line 10, in <module>
+    from . import overrides
+  File "<your-path>/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/overrides.py", line 7, in <module>
+    from numpy._core._multiarray_umath import (
+ImportError: libz.so.1: cannot open shared object file: No such file or directory
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<your-path>/.devenv/state/venv/lib/python3.10/site-packages/numpy/__init__.py", line 114, in <module>
+    from numpy.__config__ import show_config
+  File "<your-path>/.devenv/state/venv/lib/python3.10/site-packages/numpy/__config__.py", line 4, in <module>
+    from numpy._core._multiarray_umath import (
+  File "<your-path>/.devenv/state/venv/lib/python3.10/site-packages/numpy/_core/__init__.py", line 49, in <module>
+    raise ImportError(msg)
+ImportError:
+
+IMPORTANT: PLEASE READ THIS FOR ADVICE ON HOW TO SOLVE THIS ISSUE!
+
+Importing the numpy C-extensions failed. This error can happen for
+many reasons, often due to issues with your setup or how NumPy was
+installed.
+
+We have compiled some common reasons and troubleshooting tips at:
+
+    https://numpy.org/devdocs/user/troubleshooting-importerror.html
+
+Please note and check the following:
+
+  * The Python version is: Python3.10 from "<your-path>/.devenv/state/venv/bin/python"
+  * The NumPy version is: "2.2.2"
+
+and make sure that they are the versions you expect.
+Please carefully study the documentation linked above for further help.
+
+Original error was: libz.so.1: cannot open shared object file: No such file or directory
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<your-path>/.devenv/state/venv/lib/python3.10/site-packages/numpy/__init__.py", line 119, in <module>
+    raise ImportError(msg) from e
+ImportError: Error importing numpy: you should not try to import numpy from
+        its source directory; please exit the numpy source tree, and relaunch
+        your python interpreter from there.
+>>>
+#+end_src
+
+The solution is to add the corresponding ~pkgs.<library>~ in ~devenv.nix~. If you don't know what that is, you can figure it out with [[https://github.com/nix-community/nix-index][nix-locate]]:
+
+E.g.:
+
+#+begin_src bash :results raw :wrap example :exports both :eval no-export
+# First create the index
+nix-index
+
+# Then find the corresponding package
+nix-locate 'libz.so.1'
+#+end_src
+
+#+RESULTS:
+#+begin_example
+...
+zlib.out                                              0 s /nix/store/jb442jir0a2x7zsk0d63xb6rh8p280ai-zlib-1.3.1/lib/libz.so.1
+zlib.out                                        128,584 x /nix/store/jb442jir0a2x7zsk0d63xb6rh8p280ai-zlib-1.3.1/lib/libz.so.1.3.1
+...
+libz.out                                              0 s /nix/store/x4hgdkl1i7x76phgkqv24m70jawqa7jm-libz-1.2.8.2015.12.26-unstable-2018-03-31/lib/libz.so.1
+libz.out                                        107,680 r /nix/store/x4hgdkl1i7x76phgkqv24m70jawqa7jm-libz-1.2.8.2015.12.26-unstable-2018-03-31/lib/libz.so.1.2.8
+...
+#+end_example
+
+And now you can add ~pkgs.libz~ to ~devenv.nix~:
+
+#+begin_src  :results raw :wrap example :exports both :eval no-export
+...
+packages = [ pkgs.libz ];
+...
+#+end_src
+
+Another usual suspect is ~cv2~ which requires ~pkgs.libGL~ and ~pkgs.glib~.
+* Robustifying training of generative models in pytorch :noexport:
+** The problem
+- Lack of sanitization of inputs for lower precisions (i.e. float16)
+- Lack of messaging when things go wrong
+
+
+Training a generative model (e.g. a VAE) means training with very unstable loss functions. For example, let's take the loss function for a classical VAE that enforces a standard normal over the latents:
+
+
+
+
+\begin{equation}
+\mathcal{L}(x, x') = \underbrace{||x-x'||_{2}^{2}}_{\text{reconstruction part}} - \beta \underbrace{D_\text{KL}\left( q(z|x)\right)}_{\text{regularization}}
+\end{equation}
+
+where $D_{\text{KL}}$ is the Kullback-Leibler divergence of  $q(z|x)$ from the standard multivariate normal $\mathcal{N}{(\mu, \mathbf\sigma \odot \mathbf{I})}$. This is given simply by:
+\begin{equation}
+D_{\text{KL}}(q) = \frac{1}{2}\left [ \sigma_{q}^{2} + \mu_{q}^{2} -1 - \log(\sigma_{q}^{2}) \right ]
+\end{equation}
+
+Practically, $\sigma_q$ and $\mu_q$ are approximated from the "batch" of latents $z$, as $\mu_{q} = \frac{1}{B}\sum_i^B{z_i}$ and $\sigma_q = \frac{1}{B}\sum_{i}^B\left|z_{i}  - \mu_{q} \right|^2$.
+
+* Second blog post :noexport:
+:PROPERTIES:
+:EXPORT_FILE_NAME: 2024-10-07-second
+:END:
+Second blog post
