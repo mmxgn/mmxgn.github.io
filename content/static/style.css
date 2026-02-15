@@ -1,6 +1,25 @@
+/* Jensen Theme - Inspired by Deus Ex Human Revolution */
+/* https://github.com/tomaytotomato/jensen */
+
+:root {
+  --jensen-bg: #141514;           /* Eerie Black - Main background */
+  --jensen-fg: #FBFBFB;           /* White - Primary text */
+  --jensen-muted: #C4C7C4;        /* Silver Sand - Muted text */
+  --jensen-gold: #EDA622;         /* Marigold - Primary accent */
+  --jensen-copper: #E55D02;       /* Electronic Copper - Secondary accent */
+  --jensen-green: #A0FF33;        /* French Lime - Success */
+  --jensen-blue: #0EA2C9;         /* Pacific Blue - Info */
+  --jensen-red: #ED333C;          /* Imperial Red - Error */
+  --jensen-light-gold: #F2E2BA;   /* Dutch White - Light gold */
+  --jensen-dark-gold: #503A1D;    /* Café Noir - Dark gold shadows */
+  --jensen-medium-gold: #BB831B;  /* Dark Goldenrod - Medium gold */
+}
+
 html {
   font-family: Iosevka Light, Terminus, monospace;
   font-size: 15px;
+  background-color: var(--jensen-bg);
+  color: var(--jensen-fg);
 }
 
 header {
@@ -48,19 +67,53 @@ li {
   font-weight: bolder;
 }
 
+a {
+  color: var(--jensen-gold);
+  text-decoration: none;
+}
+
 a:hover {
+  color: var(--jensen-copper);
+  text-decoration: underline;
 }
 
 pre {
   font-family: Terminus, Lucida Typewriter, monospace;
   font-size: 13px;
+  background-color: #1a1b1a;
+  border-left: 3px solid var(--jensen-gold);
+  padding: 10px;
+}
+
+code {
+  color: var(--jensen-green);
+  background-color: #1a1b1a;
+  padding: 2px 6px;
+  border-radius: 3px;
 }
 
 .tag {
   font-style: italic;
   font-weight: 100;
   font-size: smaller;
-  color: ;
+  color: var(--jensen-muted);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--jensen-gold);
+}
+
+.jensen-credit {
+  text-align: center;
+  font-size: 12px;
+  color: var(--jensen-muted);
+  margin-top: 40px;
+  padding: 20px 0;
+  border-top: 1px solid var(--jensen-dark-gold);
+}
+
+.jensen-credit a {
+  color: var(--jensen-gold);
 }
 
 /* Style for the floating box */

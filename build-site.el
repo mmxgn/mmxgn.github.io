@@ -97,6 +97,8 @@
 ;;                                 "<a href=\"static/cv.pdf\">CV</a> "
 ;;                                 "<a href=\"https://scholar.google.com/citations?user=Hf0rcRcAAAAJ&hl=en&oi=ao\">Google Scholar</a>"
 ;;                                 "</nav>"))
+
+(setq org-html-postamble (load-file-as-string "content/static/postamble.html"))
 (setq python-indent-offset 4)
 ;; Generate the site output
 (org-publish-all t)
