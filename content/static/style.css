@@ -116,80 +116,40 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--jensen-gold);
 }
 
-/* Header Bar */
-.site-header {
-    background-color: var(--jensen-dark-gold);
-    border-bottom: 2px solid var(--jensen-gold);
-    padding: 15px 30px;
-    margin-bottom: 30px;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 8px rgba(237, 166, 34, 0.1);
+/* Style for the floating box */
+.floating-box {
+    position: fixed;
+    top: 50px; /* You can adjust this */
+    right: 50px; /* Distance from the right edge */
+    width: 100px;
+    padding: 20px;
+    border-radius: 8px;
+/*    background-color: #2E3440; */
+/*    color: #ECEFF4; */
+    z-index: 1000; /* Keeps it above other content */
 }
 
-.header-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
+/* Style for the profile photo */
+.profile-photo {
+    width: 100%;
+    height: auto;
+    border-radius: 50%; /* Makes the image circular */
+    margin-bottom: 15px;
 }
 
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+/* Style for the links */
+.links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
-.header-photo {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    border: 2px solid var(--jensen-gold);
-    object-fit: cover;
+.links li {
+    margin: 10px 0;
 }
 
-.header-name {
+.links li a {
+    text-decoration: none;
     font-weight: bold;
-    color: var(--jensen-light-gold);
-    font-size: 16px;
-}
-
-.header-links {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-}
-
-.header-links a {
-    color: var(--jensen-light-gold);
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.header-links a:hover {
-    color: var(--jensen-gold);
-    text-decoration: none;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-    .header-nav {
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .header-links {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 15px;
-    }
-
-    .header-name {
-        font-size: 14px;
-        text-align: center;
-    }
 }
 
