@@ -18,8 +18,16 @@
 html {
   font-family: Iosevka Light, Terminus, monospace;
   font-size: 15px;
-  background-color: var(--jensen-bg);
   color: var(--jensen-fg);
+}
+
+body {
+  background-color: #000000;
+  background-image: url('bg.png');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  /* No background-size means image keeps original size, no stretching */
 }
 
 header {
@@ -39,6 +47,31 @@ p {
   text-align: left;
   margin-left: 40px;
   margin-right: 40px;
+  background-color: rgba(20, 21, 20, 0.5);
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--jensen-gold);
+  background-color: rgba(20, 21, 20, 0.5);
+  padding: 12px 16px;
+  border-radius: 4px;
+  display: block;
+  width: fit-content;
+}
+
+ul, ol {
+  background-color: rgba(20, 21, 20, 0.5);
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-left: 40px;
+  margin-right: 40px;
+}
+
+li {
+  list-style: none;
 }
 
 pre {
