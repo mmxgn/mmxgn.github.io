@@ -73,13 +73,19 @@
              :publishing-directory "./public/static"
              :publishing-function 'org-publish-attachment)))    ;; Don't include time stamp in file
 
+;; Generate cache-busting version from current timestamp
+(defvar cache-buster (format-time-string "%Y%m%d%H%M%S"))
+
 (setq org-html-validation-link nil
       org-html-head-include-scripts nil       ;; Use our own scripts
       org-html-head-include-default-style nil ;; Use our own styles
       org-html-head (concat
+                     "<meta http-equiv=\"Cache-Control\" content=\"no-cache, no-store, must-revalidate\" />"
+                     "<meta http-equiv=\"Pragma\" content=\"no-cache\" />"
+                     "<meta http-equiv=\"Expires\" content=\"0\" />"
                      "<link rel=\"stylesheet\" href=\"https://cdn.simplecss.org/simple.min.css\" />"
-                     "<link rel=\"stylesheet\" href=\"static/style.css\" />"
-                     "<script src=\"static/hearts.js\" defer></script>"))
+                     "<link rel=\"stylesheet\" href=\"static/style.css?v=" cache-buster "\" />"
+                     "<script src=\"static/hearts.js?v=" cache-buster "\" defer></script>"))
 ;; (setq org-html-postamble 'nil)
 
 (defun load-file-as-string (file-path)
