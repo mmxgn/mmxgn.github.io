@@ -50,8 +50,8 @@ python -m http.server 8000
 Edit org files in `content/`:
 
 ```bash
-vim content/blog.org
-vim content/index.org
+emacs content/blog.org
+emacs content/index.org
 ```
 
 ### 2. Build and Test Locally
