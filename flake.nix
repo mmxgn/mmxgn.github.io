@@ -41,10 +41,16 @@
           echo ""
           echo "Site built successfully!"
           echo "Starting local server at http://localhost:8000"
+          echo "Opening browser..."
           echo "Press Ctrl+C to stop"
           echo ""
 
           cd public
+
+          # Open browser in background
+          ${pkgs.xdg-utils}/bin/xdg-open http://localhost:8000 &
+
+          # Start server
           ${pkgs.python3}/bin/python -m http.server 8000
         '';
 
@@ -53,7 +59,7 @@
         # Development shell
         devShells.default = pkgs.mkShell {
           buildInputs = [
-            pkgs.emacs-nox
+            emacs-with-packages 
             pkgs.python3
             pkgs.git
           ];
